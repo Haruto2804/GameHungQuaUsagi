@@ -11,7 +11,15 @@ const gameOverScreen = document.getElementById('game-over');
 const btnStart = document.getElementById('btn-start');
 const btnRestart = document.getElementById('btn-restart');
 const btnDiff = document.getElementById('btn-diff');
+const backgroundMusic = new Audio('./music.mp3');
+backgroundMusic.loop = true; // Lặp lại nhạc khi hết
+backgroundMusic.volume = 0.5; // Đặt âm lượng mặc định là 50%
+// --- KHAI BÁO HIỆU ỨNG ÂM THANH (THÊM MỚI) ---
+const soundEat = new Audio('./eat_fruit.mp3'); // Tên file ăn quả
+soundEat.volume = 0.8;
 
+const soundDamage = new Audio('./ouch_huhu.mp3'); // Tên file dính bom/khóc
+soundDamage.volume = 1.0;
 // State game
 let state = {
   isPlaying: false,
@@ -63,9 +71,6 @@ function updateBasketPos() {
 let statusTimeout = null;
 
 function setPlayerStatus(status) {
-  // Đảm bảo basketImg và container đã được khai báo ở phạm vi toàn cục.
-  // Lưu ý: statusTimeout cần được khai báo bằng 'let statusTimeout;' ở phạm vi toàn cục hoặc bên ngoài hàm này.
-
   // Reset hiệu ứng cũ
   basketImg.classList.remove('bounce', 'glowing', 'bomb-hit');
   clearTimeout(statusTimeout);
@@ -74,7 +79,8 @@ function setPlayerStatus(status) {
   container.classList.remove('shake-screen');
 
   if (status === 'happy') {
-    basketImg.src = './playervuimung.png';
+    // --- HIỆU ỨNG ĂN QUẢ TỐT ---
+    basketImg.src = './player-happy.png';
     basketImg.classList.add('bounce', 'glowing');
 
     statusTimeout = setTimeout(() => {
@@ -83,31 +89,29 @@ function setPlayerStatus(status) {
     }, 300);
   }
   else if (status === 'hit') {
-    // --- CHỈNH SỬA TRẠNG THÁI 'HIT' ---
+    // --- HIỆU ỨNG MẤT MẠNG/DÍNH VẬT XẤU NHẸ ---
 
-    basketImg.src = './playerkhoc.png';
+    // Mất mạng do rơi/Dính vật xấu. Chỉ rung nhẹ.
+    basketImg.src = './player-hurt.png';
 
     // 1. THÊM HIỆU ỨNG NHẢY (bounce)
     basketImg.classList.add('bounce');
 
-    // 2. Rung nhẹ màn hình (Giữ nguyên)
+    // 2. Rung nhẹ màn hình
     container.classList.add('shake-screen');
-
-    // Loại bỏ rung màn hình sau 500ms
     setTimeout(() => container.classList.remove('shake-screen'), 500);
 
-    // Reset về bình thường sau 400ms
+    // 3. Reset về bình thường sau 400ms
     statusTimeout = setTimeout(() => {
       basketImg.src = './player.png';
-      // 3. XÓA HIỆU ỨNG NHẢY khi reset
       basketImg.classList.remove('bounce');
     }, 400);
   }
   else if (status === 'bomb') {
-    // --- HIỆU ỨNG TRÚNG BOM (Giữ nguyên) ---
+    // --- HIỆU ỨNG TRÚNG BOM (Mất mạng, Khóc, Rung mạnh) ---
 
     // 1. Dùng hình khóc
-    basketImg.src = './playerkhoc.png';
+    basketImg.src = './player-hurt.png';
 
     // 2. Thêm class tạo hiệu ứng cháy đen + rung xoay
     basketImg.classList.add('bomb-hit');
@@ -123,6 +127,7 @@ function setPlayerStatus(status) {
     }, 800);
   }
   else {
+    // Trạng thái 'normal'
     basketImg.src = './player.png';
   }
 }
@@ -285,16 +290,59 @@ function handleCatch(el) {
   state.score += scoreVal;
 
   if (type === 'good') {
+    // Ăn quả tốt: Happy
     setPlayerStatus('happy');
   } else if (type === 'bad') {
-    // Đá trừ điểm nhưng không đổi hình player
-  } else if (type === 'bomb') {
+    // Dính vật phẩm xấu: Trừ điểm nhẹ, không mất mạng, chỉ rung nhẹ (dùng lại trạng thái 'hit')
     setPlayerStatus('hit');
-    state.lives--;
+  } else if (type === 'bomb') {
+    // Dính BOM: Rung lắc mạnh, mất mạng
+    setPlayerStatus('bomb');
+    state.lives--; // Mất mạng khi dính BOM
   }
 
   checkGameStatus();
   updateUI();
+} 
+function handleCatch(el) {
+    const type = el.dataset.type;
+    const scoreVal = parseInt(el.dataset.score);
+
+    // Xóa ngay lập tức
+    el.remove();
+
+    // Logic điểm & Mạng
+    state.score += scoreVal;
+
+    if (type === 'good') {
+        // Ăn quả tốt: Happy
+        
+        // >> KÍCH HOẠT ÂM THANH ĂN QUẢ <<
+        soundEat.currentTime = 0; // Tua về đầu để phát lại ngay lập tức
+        soundEat.play(); 
+        
+        setPlayerStatus('happy');
+    } else if (type === 'bad') {
+        // Dính vật phẩm xấu: Trừ điểm nhẹ, rung nhẹ
+
+        // >> KÍCH HOẠT ÂM THANH DÍNH LỖI NHẸ <<
+        soundDamage.currentTime = 0; 
+        soundDamage.play();
+        
+        setPlayerStatus('hit');
+    } else if (type === 'bomb') {
+        // Dính BOM: Rung lắc mạnh, mất mạng
+
+        // >> KÍCH HOẠT ÂM THANH KHÓC/DÍNH BOM <<
+        soundDamage.currentTime = 0; 
+        soundDamage.play();
+        
+        setPlayerStatus('bomb'); 
+        state.lives--; // Mất mạng khi dính BOM
+    }
+
+    checkGameStatus();
+    updateUI();
 }
 
 function handleMiss(el) {
@@ -356,3 +404,75 @@ function changeDifficulty() {
 btnStart.addEventListener('click', startGame);
 btnRestart.addEventListener('click', startGame);
 btnDiff.addEventListener('click', changeDifficulty);
+
+// --- LOGIC ĐIỀU KHIỂN ÂM THANH ---
+
+// DOM Elements
+const elMusicToggle = document.getElementById('btn-toggle-music');
+const elMusicIcon = document.getElementById('music-icon');
+const elVolUp = document.getElementById('btn-vol-up');
+const elVolDown = document.getElementById('btn-vol-down');
+
+let isMusicPlaying = false; // Trạng thái nhạc
+
+// Hàm cập nhật icon
+function updateMusicIcon() {
+  if (backgroundMusic.muted || backgroundMusic.volume === 0) {
+    elMusicIcon.innerText = '🔇'; // Tắt tiếng
+  } else if (isMusicPlaying) {
+    elMusicIcon.innerText = '🔊'; // Đang chạy
+  } else {
+    elMusicIcon.innerText = '🎶'; // Tạm dừng
+  }
+}
+
+// 1. Nút Bật/Tắt Nhạc (Play/Pause)
+elMusicToggle.addEventListener('click', () => {
+  if (isMusicPlaying) {
+    backgroundMusic.pause();
+    isMusicPlaying = false;
+  } else {
+    // Lưu ý: Nhiều trình duyệt (đặc biệt là mobile) yêu cầu 
+    // người dùng phải tương tác trước (click) mới cho phép Play
+    backgroundMusic.play().catch(error => {
+      console.error("Không thể tự động phát nhạc:", error);
+      // Có thể hiện thông báo nhỏ cho người dùng nếu bị lỗi
+    });
+    isMusicPlaying = true;
+  }
+  backgroundMusic.muted = false; // Luôn bỏ mute khi click play/pause
+  updateMusicIcon();
+});
+
+// 2. Nút Tăng Âm lượng
+elVolUp.addEventListener('click', () => {
+  // Tăng 10% mỗi lần click
+  if (backgroundMusic.volume < 1) {
+    backgroundMusic.volume = Math.min(1, backgroundMusic.volume + 0.1);
+  }
+  backgroundMusic.muted = false; // Đảm bảo không bị tắt tiếng
+  updateMusicIcon();
+});
+
+// 3. Nút Giảm Âm lượng
+elVolDown.addEventListener('click', () => {
+  // Giảm 10% mỗi lần click
+  if (backgroundMusic.volume > 0) {
+    backgroundMusic.volume = Math.max(0, backgroundMusic.volume - 0.1);
+  }
+  updateMusicIcon();
+});
+
+
+// 4. Bắt đầu nhạc khi vào game (tối ưu cho mobile)
+// Chúng ta cần đảm bảo nhạc chạy khi người dùng nhấn "CHƠI NGAY"
+el.btnPlay.addEventListener('click', () => {
+  startGame();
+  if (!isMusicPlaying) {
+    backgroundMusic.play().catch(error => {
+      // Xử lý lỗi nếu trình duyệt chặn autoplay
+    });
+    isMusicPlaying = true;
+    updateMusicIcon();
+  }
+});

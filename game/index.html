@@ -330,6 +330,58 @@
       /* Bộ lọc làm ảnh tối đi và đỏ lên (giả lập bị cháy nổ) */
       filter: grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(500%) !important;
     }
+
+    /* --- UI ĐIỀU KHIỂN ÂM THANH (MỚI) --- */
+    #audio-control {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 80;
+      /* Đảm bảo nổi trên cỏ và player */
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+      /* Cho phép click */
+    }
+
+    /* Kích thước nút và responsive */
+    .audio-btn {
+      width: 50px;
+      height: 50px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 2px solid #333;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.1s;
+    }
+
+    .audio-btn:active {
+      transform: scale(0.9);
+    }
+
+    .audio-btn:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* Responsive cho Mobile */
+    @media (max-width: 600px) {
+      #audio-control {
+        bottom: 10px;
+        left: 10px;
+        gap: 5px;
+      }
+
+      .audio-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+    }
   </style>
 </head>
 
@@ -363,9 +415,19 @@
         <button id="btn-diff" class="diff-btn">Tăng ▲</button>
       </div>
     </div>
-
+    <div id="audio-control">
+      <button id="btn-toggle-music" class="audio-btn">
+        <span id="music-icon">🎵</span>
+      </button>
+      <button id="btn-vol-down" class="audio-btn">
+        <span>-</span>
+      </button>
+      <button id="btn-vol-up" class="audio-btn">
+        <span>+</span>
+      </button>
+    </div>
     <div id="basket">
-      <img id="basket-img" src="./player.png" alt="Player">
+      <img id="basket-img" src="./player.png" alt="Player " class="w-30">
     </div>
 
   </div>
