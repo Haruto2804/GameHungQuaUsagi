@@ -2,437 +2,315 @@
 <html lang="vi">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🍎 Hứng Hoa Quả Pro 🌳</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* --- CẤU HÌNH CHUNG --- */
-    body {
-      background-color: #fcf8e3;
-      /* Vàng kem nhẹ */
-      overflow: hidden;
-      font-family: 'Fredoka', sans-serif;
-      user-select: none;
-      /* Ngăn bôi đen văn bản khi chơi */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🍎 Hứng Hoa Quả Pro 🌳</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- CẤU HÌNH CHUNG & BIẾN CSS --- */
+        :root {
+            /* Kích thước gốc của game */
+            --game-width-base: 950px;
+            --game-height-base: 600px;
+        }
 
-    #game-container {
-      position: relative;
-      overflow: hidden;
-      /* Quan trọng: ẩn vật phẩm bay ra ngoài */
-      width: 950px;
-      height: 600px;
-      /* Gradient bầu trời đẹp hơn */
-      background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
-      border: 10px solid #7cb342;
-      /* Viền xanh lá mạ */
-      border-radius: 25px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-    }
+        body {
+            background-color: #fcf8e3;
+            overflow: hidden;
+            font-family: 'Fredoka', sans-serif;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            /* Cần thiết cho mobile để loại bỏ khoảng trống thừa */
+            box-sizing: border-box; 
+        }
 
-    /* Responsive Mobile */
-    @media (max-width: 767px) {
-      #game-container {
-        width: 100vw;
-        height: 100vh;
-        border: none;
-        border-radius: 0;
-      }
-    }
+        #game-container {
+            position: relative;
+            overflow: hidden;
+            /* Kích thước gốc */
+            width: var(--game-width-base);
+            height: var(--game-height-base);
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
+            border: 10px solid #7cb342;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            /* Đảm bảo tỉ lệ được giữ */
+            transform-origin: center center;
+            /* Transform được tính toán bằng JS */
+            transform: scale(var(--scale, 1));
+            transition: border-radius 0.3s;
+        }
 
-    /* --- PLAYER / RỔ (ĐÃ FIX KÍCH THƯỚC) --- */
-    #basket {
-      position: absolute;
-      bottom: 10px;
-      width: 110px;
-      /* Kích thước cố định */
-      height: 110px;
-      z-index: 50;
-      /* Cao hơn chim và quả */
-      pointer-events: none;
-      /* Để chuột không bị cản bởi rổ */
-    }
+        /* --- LOGIC RESPONSIVE CHÍNH: Bỏ viền và góc tròn khi scale --- */
+        @media (max-width: 949px),
+        (max-height: 599px) {
+            #game-container {
+                border: none;
+                border-radius: 0;
+            }
+        }
 
-    #basket-img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      /* Ảnh luôn nằm trọn trong khung */
-      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3));
-      transition: transform 0.1s;
-    }
+        /* --- PLAYER / RỔ --- */
+        #basket {
+            position: absolute;
+            bottom: 10px;
+            width: 110px;
+            height: 110px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        #basket-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3));
+            transition: transform 0.1s;
+        }
+        .bounce { 
+            animation: bounceAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceAnim {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.15) translateY(-15px); }
+        }
+        .glowing {
+            filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important;
+        }
 
-    /* Hiệu ứng Rổ */
-    .bounce {
-      animation: bounceAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+        /* --- VẬT PHẨM (FRUITS & BOMBS) --- */
+        .fruit { 
+            position: absolute;
+            top: -60px;
+            width: 50px;
+            height: 50px;
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35px;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
+        }
 
-    @keyframes bounceAnim {
+        /* --- CHIM BAY --- */
+        .bird { 
+            position: absolute;
+            z-index: 20;
+            font-size: 40px;
+            opacity: 0.9;
+            will-change: transform;
+        }
+        @keyframes flyRight { 
+            from { transform: translateX(-100px) translateY(0px); }
+            25% { transform: translateX(250px) translateY(-20px); }
+            50% { transform: translateX(500px) translateY(0px); }
+            75% { transform: translateX(750px) translateY(20px); }
+            to { transform: translateX(1100px) translateY(0px); }
+        }
 
-      0%,
-      100% {
-        transform: scale(1) translateY(0);
-      }
+        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER --- */
+        #start-screen, #game-over { 
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+        #start-screen {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        #game-over {
+            z-index: 110;
+            background: rgba(220, 50, 50, 0.9);
+            color: white;
+        }
+        #start-screen.hidden, #game-over.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        h1.title { 
+            font-size: 4rem;
+            color: #ffeb3b;
+            text-shadow: 4px 4px 0px #ff9800, 8px 8px 0px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .btn { 
+            background: linear-gradient(to bottom, #8bc34a, #689f38);
+            border: 4px solid #fff;
+            color: white;
+            padding: 15px 40px;
+            font-size: 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
 
-      50% {
-        transform: scale(1.15) translateY(-15px);
-      }
-    }
+        /* --- UI ĐIỂM SỐ & ĐỘ KHÓ --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 90;
+        }
+        #score-board {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 30px;
+            border-radius: 30px;
+            border: 3px solid #7cb342;
+            color: #558b2f;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            pointer-events: auto;
+        }
+        #difficulty-box {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            pointer-events: auto;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #555;
+            border: 2px solid #ddd;
+        }
 
-    .glowing {
-      filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important;
-    }
+        /* --- UI ĐIỀU KHIỂN ÂM THANH (ĐIỀU CHỈNH VỊ TRÍ CHO MOBILE) --- */
+        #audio-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 80;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .audio-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.1s;
+        }
 
-    /* --- VẬT PHẨM (FRUITS & BOMBS) --- */
-    .fruit {
-      position: absolute;
-      top: -60px;
-      width: 50px;
-      height: 50px;
-      z-index: 40;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 35px;
-      /* Kích thước emoji */
-      /* Bóng đổ cho vật phẩm */
-      filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
-    }
-
-    /* --- CHIM BAY (ANIMATION MƯỢT) --- */
-    .bird {
-      position: absolute;
-      z-index: 20;
-      /* Bay sau lưng item và rổ */
-      font-size: 40px;
-      opacity: 0.9;
-      will-change: transform;
-      /* Tối ưu hiệu năng render */
-    }
-
-    /* Animation bay từ Trái sang Phải */
-    @keyframes flyRight {
-      from {
-        transform: translateX(-100px) translateY(0px);
-      }
-
-      25% {
-        transform: translateX(250px) translateY(-20px);
-      }
-
-      50% {
-        transform: translateX(500px) translateY(0px);
-      }
-
-      75% {
-        transform: translateX(750px) translateY(20px);
-      }
-
-      to {
-        transform: translateX(1100px) translateY(0px);
-      }
-    }
-
-    /* --- MÀN HÌNH BẮT ĐẦU (Start Screen) --- */
-    #start-screen {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(5px);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.3s;
-    }
-
-    #start-screen.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    h1.title {
-      font-size: 4rem;
-      color: #ffeb3b;
-      text-shadow: 4px 4px 0px #ff9800, 8px 8px 0px rgba(0, 0, 0, 0.2);
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-    }
-
-    /* Nút Bấm Đẹp */
-    .btn {
-      background: linear-gradient(to bottom, #8bc34a, #689f38);
-      border: 4px solid #fff;
-      color: white;
-      padding: 15px 40px;
-      font-size: 2rem;
-      border-radius: 50px;
-      cursor: pointer;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn:hover {
-      filter: brightness(1.1);
-    }
-
-    /* --- UI ĐIỂM SỐ & ĐỘ KHÓ --- */
-    #ui-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      /* Click xuyên qua UI */
-      z-index: 90;
-    }
-
-    #score-board {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px 30px;
-      border-radius: 30px;
-      border: 3px solid #7cb342;
-      color: #558b2f;
-      font-size: 2rem;
-      font-weight: bold;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    /* Nút Độ khó (Nằm ngoài game container hoặc góc dưới) */
-    #difficulty-box {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      pointer-events: auto;
-      /* Để click được */
-      background: white;
-      padding: 8px 15px;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      color: #555;
-      border: 2px solid #ddd;
-    }
-
-    .diff-btn {
-      background: #ff9800;
-      color: white;
-      border: none;
-      padding: 5px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    /* Game Over */
-    #game-over {
-      background: rgba(220, 50, 50, 0.9);
-    }
-
-    .shake-screen {
-      animation: shake 0.5s;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translate(0, 0);
-      }
-
-      25% {
-        transform: translate(-5px, 5px);
-      }
-
-      75% {
-        transform: translate(5px, -5px);
-      }
-    }
-
-    /* Mây trang trí */
-    .cloud {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      z-index: 10;
-    }
-
-    .c1 {
-      width: 120px;
-      height: 60px;
-      top: 50px;
-      left: 10%;
-      animation: float 20s infinite linear;
-    }
-
-    .c2 {
-      width: 160px;
-      height: 80px;
-      top: 100px;
-      right: 20%;
-      animation: float 25s infinite linear reverse;
-    }
-
-    @keyframes float {
-      from {
-        transform: translateX(-50px);
-      }
-
-      to {
-        transform: translateX(50px);
-      }
-    }
-
-    @keyframes explodeShake {
-
-      0%,
-      100% {
-        transform: translate(0, 0) rotate(0deg) scale(1);
-      }
-
-      10%,
-      30%,
-      50%,
-      70%,
-      90% {
-        transform: translate(-8px, -8px) rotate(-15deg) scale(1.1);
-      }
-
-      20%,
-      40%,
-      60%,
-      80% {
-        transform: translate(8px, 8px) rotate(15deg) scale(0.9);
-      }
-    }
-
-    .bomb-hit {
-      animation: explodeShake 0.6s ease-in-out;
-      /* Bộ lọc làm ảnh tối đi và đỏ lên (giả lập bị cháy nổ) */
-      filter: grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(500%) !important;
-    }
-
-    /* --- UI ĐIỀU KHIỂN ÂM THANH (MỚI) --- */
-    #audio-control {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      z-index: 80;
-      /* Đảm bảo nổi trên cỏ và player */
-      display: flex;
-      gap: 10px;
-      pointer-events: auto;
-      /* Cho phép click */
-    }
-
-    /* Kích thước nút và responsive */
-    .audio-btn {
-      width: 50px;
-      height: 50px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border: 2px solid #333;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.5rem;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      transition: all 0.1s;
-    }
-
-    .audio-btn:active {
-      transform: scale(0.9);
-    }
-
-    .audio-btn:hover {
-      background-color: #f0f0f0;
-    }
-
-    /* Responsive cho Mobile */
-    @media (max-width: 600px) {
-      #audio-control {
-        bottom: 10px;
-        left: 10px;
-        gap: 5px;
-      }
-
-      .audio-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-      }
-    }
-  </style>
+        /* Tối ưu UI cho màn hình nhỏ (chỉ cần scale đã xử lý phần lớn, đây là tinh chỉnh vị trí) */
+        @media (max-width: 767px) {
+            /* Giảm kích thước và đẩy vào góc sát hơn khi scale nhỏ */
+            #score-board {
+                top: 10px;
+                transform: translateX(-50%) scale(0.9); 
+            }
+            #difficulty-box {
+                bottom: 10px;
+                right: 5px;
+                transform: scale(0.9);
+            }
+            #audio-control {
+                bottom: 10px;
+                left: 5px;
+                transform: scale(0.9);
+            }
+        }
+        
+        /* Hiệu ứng rung màn hình */
+        .shake-screen { 
+            animation: shake 0.5s;
+        }
+        @keyframes shake { 
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 5px); }
+            75% { transform: translate(5px, -5px); }
+        }
+        .bomb-hit { 
+            animation: explodeShake 0.6s ease-in-out;
+            filter: grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(500%) !important;
+        }
+    </style>
 </head>
 
 <body>
 
-  <div id="game-container">
+    <div id="game-container">
 
-    <div class="cloud c1"></div>
-    <div class="cloud c2"></div>
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
 
-    <div id="start-screen">
-      <h1 class="title">HỨNG QUẢ</h1>
-      <button id="btn-start" class="btn">CHƠI NGAY ▶</button>
+        <div id="start-screen">
+            <h1 class="title">HỨNG QUẢ</h1>
+            <button id="btn-start" class="btn">CHƠI NGAY ▶</button>
+        </div>
+
+        <div id="game-over" class="hidden">
+            <h2 class="text-6xl font-bold mb-5 drop-shadow-md">GAME OVER</h2>
+            <p class="text-3xl mb-8">Điểm số: <span id="final-score" class="text-yellow-300 font-bold">0</span></p>
+            <button id="btn-restart" class="btn bg-blue-500">CHƠI LẠI ↺</button>
+        </div>
+
+        <div id="ui-layer">
+            <div id="score-board">
+                <span id="lives-display">❤️❤️❤️</span>
+                <span>|</span>
+                <span id="score-display">0</span>
+            </div>
+
+            <div id="difficulty-box">
+                <span>Cấp độ: <span id="diff-label" class="text-green-500">Dễ</span></span>
+                <button id="btn-diff" class="diff-btn">Tăng ▲</button>
+            </div>
+        </div>
+
+        <div id="audio-control">
+            <button id="btn-toggle-music" class="audio-btn">
+                <span id="music-icon">🎶</span>
+            </button>
+            <button id="btn-vol-down" class="audio-btn">
+                <span>-</span>
+            </button>
+            <button id="btn-vol-up" class="audio-btn">
+                <span>+</span>
+            </button>
+        </div>
+
+        <div id="basket">
+            <img id="basket-img" src="./player.png" alt="Player " class="w-30">
+        </div>
+
     </div>
 
-    <div id="game-over" class="hidden absolute inset-0 z-[110] flex flex-col justify-center items-center text-white">
-      <h2 class="text-6xl font-bold mb-5 drop-shadow-md">GAME OVER</h2>
-      <p class="text-3xl mb-8">Điểm số: <span id="final-score" class="text-yellow-300 font-bold">0</span></p>
-      <button id="btn-restart" class="btn bg-blue-500">CHƠI LẠI ↺</button>
-    </div>
-
-    <div id="ui-layer">
-      <div id="score-board">
-        <span id="lives-display">❤️❤️❤️</span>
-        <span>|</span>
-        <span id="score-display">0</span>
-      </div>
-
-      <div id="difficulty-box">
-        <span>Cấp độ: <span id="diff-label" class="text-orange-500">Dễ</span></span>
-        <button id="btn-diff" class="diff-btn">Tăng ▲</button>
-      </div>
-    </div>
-    <div id="audio-control">
-      <button id="btn-toggle-music" class="audio-btn">
-        <span id="music-icon">🎵</span>
-      </button>
-      <button id="btn-vol-down" class="audio-btn">
-        <span>-</span>
-      </button>
-      <button id="btn-vol-up" class="audio-btn">
-        <span>+</span>
-      </button>
-    </div>
-    <div id="basket">
-      <img id="basket-img" src="./player.png" alt="Player " class="w-30">
-    </div>
-
-  </div>
-
-  <script src="scripts.js"></script>
+    <script src="scripts.js"></script>
 </body>
 
 </html>
