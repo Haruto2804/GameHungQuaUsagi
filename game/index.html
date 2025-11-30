@@ -2,298 +2,942 @@
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍎 Hứng Hoa Quả Pro 🌳</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* --- CẤU HÌNH CHUNG & BIẾN CSS --- */
-        :root {
-            --game-width-base: 950px;
-            --game-height-base: 600px;
-            --scale: 1; /* Biến CSS sẽ được JS cập nhật */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🍎 Hứng Quả — Bright Casual (Clean)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-        body {
-            background-color: #fcf8e3;
-            overflow: hidden;
-            font-family: 'Fredoka', sans-serif;
-            user-select: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box; 
-        }
+  <style>
+    :root {
+      --base-w: 950px;
+      --base-h: 600px;
+      --scale: 1;
+      --bg: #fcf8e3;
+      --panel: #7cb342;
+      --accent: #ff9800
+    }
 
-        #game-container {
-            position: relative;
-            overflow: hidden;
-            width: var(--game-width-base);
-            height: var(--game-height-base);
-            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
-            border: 10px solid #7cb342;
-            border-radius: 25px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-            transform-origin: center center;
-            transform: scale(var(--scale));
-            transition: border-radius 0.3s;
-        }
+    /* Cấu hình chung */
+    * {
+      box-sizing: border-box
+    }
 
-        /* --- PHẦN: LOCK XOAY MÀN HÌNH & THÔNG BÁO --- */
-        #rotate-device-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #333;
-            color: white;
-            z-index: 9999;
-            display: none; /* Mặc định ẩn */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 1.5rem;
-            padding: 20px;
-            font-weight: bold;
-            pointer-events: none;
-        }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Fredoka, Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial
+    }
 
-        /* Kích hoạt khi màn hình nhỏ (mobile) ở chế độ dọc (portrait) */
-        @media (max-width: 950px) and (orientation: portrait) {
-            #rotate-device-screen {
-                display: flex;
-                pointer-events: auto;
-            }
-            #game-container {
-                opacity: 0 !important;
-                pointer-events: none !important;
-            }
-        }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      overflow: hidden
+    }
 
-        @keyframes rotate-icon {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(90deg) scale(1.2); }
-            100% { transform: rotate(0deg); }
-        }
+    /* container that will be scaled */
+    #game-wrap {
+      width: var(--base-w);
+      height: var(--base-h);
+      transform: scale(var(--scale));
+      transform-origin: center center;
+      position: relative;
+      transition: transform .18s ease
+    }
 
-        .rotate-anim {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: rotate-icon 2s ease-in-out infinite;
-            color: #ffeb3b;
-        }
+    #game-container {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      border: 10px solid var(--panel);
+      overflow: hidden;
+      background: linear-gradient(#87CEEB, #E0F7FA);
+      position: relative
+    }
 
-        /* --- PLAYER / RỔ --- */
-        #basket {
-            position: absolute; bottom: 10px; width: 110px; height: 110px; z-index: 50; pointer-events: none;
-        }
-        #basket-img {
-            width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3)); transition: transform 0.1s;
-        }
-        .bounce { animation: bounceAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes bounceAnim { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.15) translateY(-15px); } }
-        .glowing { filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important; }
-        .shake-screen { animation: shake 0.5s ease-in-out; }
-        @keyframes shake {
-            0%, 100% { transform: translate(1px, 1px) scale(var(--scale)); }
-            10%, 90% { transform: translate(-1px, -2px) scale(var(--scale)); }
-            20%, 80% { transform: translate(-3px, 0px) scale(var(--scale)); }
-            30%, 70% { transform: translate(3px, 2px) scale(var(--scale)); }
-            40%, 60% { transform: translate(1px, -1px) scale(var(--scale)); }
-            50% { transform: translate(-1px, 2px) scale(var(--scale)); }
-        }
+    /* rotate overlay */
+    #rotate-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      z-index: 120;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+      pointer-events: none;
+    }
 
-        /* --- VẬT PHẨM & CHIM BAY --- */
-        .fruit { 
-            position: absolute; top: -60px; width: 50px; height: 50px; z-index: 40; display: flex; justify-content: center; align-items: center; font-size: 35px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2)); will-change: transform, top;
-        }
-        .bird { 
-            position: absolute; z-index: 20; font-size: 40px; opacity: 0.9; will-change: transform; left: -100px;
-        }
-        @keyframes flyRight { 
-            0% { transform: translateX(0px) translateY(0px); } 25% { transform: translateX(300px) translateY(-20px); } 50% { transform: translateX(600px) translateY(0px); } 75% { transform: translateX(900px) translateY(20px); } 100% { transform: translateX(1050px) translateY(0px); }
-        }
+    #rotate-overlay.show {
+      display: flex;
+      pointer-events: auto;
+    }
 
-        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER / PAUSE --- */
-        #start-screen, #game-over, #pause-screen { 
-            position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s;
-        }
-        #start-screen { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
-        #game-over { z-index: 110; background: rgba(220, 50, 50, 0.9); color: white; }
-        #pause-screen { z-index: 105; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); color: white; flex-direction: column; }
-        .hidden { opacity: 0; pointer-events: none; }
-        h1.title { font-size: 4rem; color: #ffeb3b; text-shadow: 4px 4px 0px #ff9800, 8px 8px 0px rgba(0, 0, 0, 0.2); margin-bottom: 30px; letter-spacing: 2px; }
+    .rotate-emoji {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      animation: rotate 1.8s ease-in-out infinite
+    }
 
-        /* --- NÚT BẤM DỄ THƯƠNG (.btn) --- */
-        .btn { 
-            background: linear-gradient(to bottom, #ffeb3b, #ff9800); border: 5px solid #fff; color: #8d6e63; padding: 15px 40px; font-size: 2rem; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 0px 0px #f44336, 0 15px 15px rgba(0, 0, 0, 0.2); transition: transform 0.1s, box-shadow 0.1s; font-weight: 700;
-        }
-        .btn:active { transform: translateY(10px) scale(0.98); box-shadow: 0 0px 0px 0px #f44336, 0 5px 10px rgba(0, 0, 0, 0.2); }
-        .btn-green { background: linear-gradient(to bottom, #8bc34a, #558b2f); box-shadow: 0 10px 0px 0px #4caf50, 0 15px 15px rgba(0, 0, 0, 0.2); color: white; }
-        .btn-green:active { box-shadow: 0 0px 0px 0px #4caf50, 0 5px 10px rgba(0, 0, 0, 0.2); }
+    @keyframes rotate {
+      0% {
+        transform: rotate(0)
+      }
 
-        /* --- UI ĐIỂM SỐ & NÚT PAUSE --- */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; }
-        #top-ui-row { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; }
-        #score-board { background: rgba(255, 255, 255, 0.95); padding: 10px 30px; border-radius: 30px; border: 5px solid #ff9800; color: #558b2f; font-size: 2rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); display: flex; gap: 15px; align-items: center; pointer-events: auto; }
-        .high-score-text { font-size: 1rem; color: #f44336; font-weight: 700; }
-        #btn-pause { pointer-events: auto; background: #ff7043; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: white; border: 4px solid #fff; cursor: pointer; box-shadow: 0 5px 0 #bf360c, 0 8px 10px rgba(0, 0, 0, 0.2); transition: transform 0.1s; }
-        #btn-pause:active { transform: translateY(5px) scale(0.9); box-shadow: 0 0px 0 #bf360c, 0 3px 5px rgba(0, 0, 0, 0.2); }
+      50% {
+        transform: rotate(90deg) scale(1.05)
+      }
+
+      100% {
+        transform: rotate(0)
+      }
+    }
+
+    /* Landscape Lock: Chỉ hiển thị overlay khi ở chế độ dọc (portrait) trên màn hình nhỏ */
+    @media (max-width: 950px) and (orientation: portrait) {
+      #rotate-overlay {
+        display: flex;
+      }
+
+      #game-wrap {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+
+    /* bright casual UI */
+    #top-ui {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 60
+    }
+
+    .score-card {
+      background: rgba(255, 255, 255, 0.98);
+      padding: 10px 14px;
+      border-radius: 22px;
+      border: 4px solid var(--accent);
+      font-weight: 800;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      pointer-events: auto
+    }
+
+    .score-small {
+      font-size: 13px;
+      color: #f44336
+    }
+
+    #controls-left {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    #controls-right {
+      pointer-events: auto
+    }
+
+    /* basket */
+    #basket {
+      position: absolute;
+      bottom: 12px;
+      left: calc(50% - 55px);
+      width: 110px;
+      height: 110px;
+      z-index: 70;
+      pointer-events: none
+    }
+
+    #basket-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform .12s
+    }
+
+    /* XÓA: .happy, .bomb-hit cũ */
+
+    /* --- HIỆU ỨNG PHÁT SÁNG VÀ RUNG MÀN HÌNH MỚI --- */
+
+    /* 1. Lắc nhẹ giỏ khi hứng quả */
+    @keyframes bounce-basket {
+
+      0%,
+      100% {
+        transform: scale(1) translateY(0);
+      }
+
+      50% {
+        transform: scale(1.1) translateY(-8px);
+      }
+    }
+
+    .basket-bounce {
+      animation: bounce-basket 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* 2. Phát sáng (Glow) khi hạnh phúc */
+    .basket-glow {
+      filter: drop-shadow(0 0 8px #ffeb3b) drop-shadow(0 0 15px #ff9800);
+    }
+
+    /* 3. Lắc lư trạng thái bình thường */
+    @keyframes normal-float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-3px);
+      }
+    }
+
+    .basket-normal-float {
+      animation: normal-float 2s ease-in-out infinite;
+    }
+
+    /* 4. Rung màn hình khi va chạm mạnh */
+    @keyframes screen-shake {
+      0% {
+        transform: translate(1px, 1px) scale(var(--scale));
+      }
+
+      10% {
+        transform: translate(-1px, -2px) scale(var(--scale));
+      }
+
+      20% {
+        transform: translate(-3px, 0px) scale(var(--scale));
+      }
+
+      30% {
+        transform: translate(3px, 2px) scale(var(--scale));
+      }
+
+      40% {
+        transform: translate(1px, -1px) scale(var(--scale));
+      }
+
+      50% {
+        transform: translate(-1px, 2px) scale(var(--scale));
+      }
+
+      60% {
+        transform: translate(-3px, 1px) scale(var(--scale));
+      }
+
+      70% {
+        transform: translate(1px, -2px) scale(var(--scale));
+      }
+
+      80% {
+        transform: translate(1px, 2px) scale(var(--scale));
+      }
+
+      90% {
+        transform: translate(-1px, 1px) scale(var(--scale));
+      }
+
+      100% {
+        transform: translate(0, 0) scale(var(--scale));
+      }
+    }
+
+    .game-shake {
+      animation: screen-shake 0.8s ease-in-out;
+    }
+
+    /* Player bị va chạm (vẫn dùng bomb-hit class cũ) */
+    .bomb-hit {
+      transform: scale(0.86) rotate(-10deg);
+    }
 
 
-        /* --- CONTROL BUTTONS (MOBILE ONLY) --- */
-        #control-buttons {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 70;
-            display: flex;
-            pointer-events: none;
-            gap: 100px;
-            /* MẶC ĐỊNH ẨN trên Desktop */
-            opacity: 0; 
-            transition: opacity 0.3s;
-        }
-        .control-btn {
-            pointer-events: auto; 
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(to top, #4dd0e1, #80deea);
-            color: white;
-            border: 5px solid white;
-            border-radius: 50%;
-            font-size: 3rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 8px 0 #00bcd4, 0 10px 10px rgba(0, 0, 0, 0.3);
-            transition: background 0.1s;
-        }
-        .control-btn:active {
-            transform: translateY(5px);
-            box-shadow: 0 3px 0 #00bcd4, 0 5px 5px rgba(0, 0, 0, 0.2);
-        }
+    /* items */
+    .item {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, .18);
+      will-change: transform, top
+    }
 
-        /* --- TỐI ƯU/HIỂN THỊ CHO MÀN HÌNH NHỎ (Mobile/Tablet) --- */
-        @media (max-width: 950px) {
-            /* HIỂN THỊ nút ảo trên Mobile/Tablet */
-            #control-buttons {
-                opacity: 1; 
-                gap: 50px; 
-            }
-            .control-btn {
-                width: 70px;
-                height: 70px;
-                font-size: 2.5rem;
-                box-shadow: 0 5px 0 #00bcd4, 0 8px 10px rgba(0, 0, 0, 0.3);
-            }
-            
-            #top-ui-row { top: 5px; padding: 0 5px; }
-            #score-board { transform: scale(0.9); font-size: 1.5rem; padding: 5px 15px; }
-            .high-score-text { font-size: 0.8rem; }
-            #btn-pause { width: 40px; height: 40px; font-size: 1.5rem; transform: scale(0.9); }
-            #pause-controls-group { flex-direction: column; gap: 20px; }
-        }
-    </style>
+    .tainted {
+      box-shadow: 0 0 12px 3px rgba(255, 80, 80, 0.18);
+    }
+
+    .bomb-mark {
+      position: absolute;
+      right: 2px;
+      top: 2px;
+      font-size: 12px
+    }
+
+    /* sparkle effect */
+    .sparkle {
+      position: absolute;
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0;
+      transform: scale(.8);
+    }
+
+    .sparkle.show {
+      animation: sparkle .45s ease-out forwards
+    }
+
+    @keyframes sparkle {
+      0% {
+        opacity: 0;
+        transform: scale(.6)
+      }
+
+      40% {
+        opacity: 1;
+        transform: scale(1.05)
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.3)
+      }
+    }
+
+    /* explosion */
+    .boom {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 230, 120, 1), rgba(255, 120, 80, .9) 40%, rgba(255, 40, 40, .7) 60%, rgba(0, 0, 0, 0) 61%);
+      filter: blur(6px);
+      pointer-events: none;
+      opacity: .95;
+      transform: scale(.6);
+      animation: boom 0.6s ease-out forwards;
+      z-index: 220
+    }
+
+    @keyframes boom {
+      0% {
+        transform: scale(.6);
+        opacity: 1
+      }
+
+      100% {
+        transform: scale(1.4);
+        opacity: 0
+      }
+    }
+
+    /* overlays */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 240;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff
+    }
+
+    .hidden {
+      display: none
+    }
+
+    /* --- CSS CHO PAUSE SCREEN (MỚI) --- */
+    .pause-btn {
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 0px 0px rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s, box-shadow 0.1s;
+      border: 3px solid #fff;
+      min-width: 130px;
+    }
+
+    .pause-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-green-cute {
+      background: linear-gradient(to bottom, #aed581, #7cb342);
+      color: white;
+    }
+
+    .btn-orange-cute {
+      background: linear-gradient(to bottom, #ffb74d, #ff9800);
+      color: white;
+    }
+
+    .music-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #e0e0e0;
+      padding: 8px 12px;
+      border-radius: 12px;
+      margin-top: 5px;
+    }
+
+    .music-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #f44336;
+      color: white;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* mobile controls */
+    #control-buttons {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 12px;
+      display: flex;
+      gap: 22px;
+      z-index: 90;
+      pointer-events: none;
+      display: none;
+      /* MẶC ĐỊNH ẨN trên Desktop */
+    }
+
+    .control-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      background: #4dd0e1;
+      border: 6px solid #fff;
+      pointer-events: auto;
+      box-shadow: 0 10px 0 #00bcd4
+    }
+
+    .control-btn:active {
+      transform: translateY(8px);
+      box-shadow: 0 2px 0 #00bcd4
+    }
+
+    /* Tối ưu UI cho màn hình nhỏ */
+    @media (max-width:940px) {
+      :root {
+        --scale: 1
+      }
+
+      /* HIỂN THỊ NÚT ẢO TRÊN MOBILE */
+      #control-buttons {
+        display: flex
+      }
+
+      #top-ui {
+        top: 8px;
+        padding: 0 8px
+      }
+
+      .score-card {
+        transform: scale(.95);
+        padding: 8px 10px
+      }
+
+      #basket {
+        width: 90px;
+        height: 90px
+      }
+
+      .item {
+        width: 48px;
+        height: 48px;
+        font-size: 30px
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div id="rotate-overlay">
+    <div class="rotate-emoji">🔄</div>
+    <div>Vui lòng xoay ngang (Landscape) để chơi.</div>
+  </div>
 
-    <div id="rotate-device-screen">
-        <div class="rotate-anim">🔄</div>
-        <p>Vui lòng **xoay ngang màn hình** (Landscape) để chơi game.</p>
-    </div>
-
+  <div id="game-wrap">
     <div id="game-container">
 
-        <div class="cloud c1"></div>
-        <div class="cloud c2"></div>
-
-        <div id="start-screen">
-            <h1 class="title">HỨNG QUẢ</h1>
-            <p class="text-2xl mb-8 text-yellow-300 font-bold">Điểm Cao Nhất: <span id="start-high-score">0</span></p>
-            <button id="btn-start" class="btn">CHƠI NGAY ▶</button>
+      <div id="start-screen" class="overlay">
+        <div class="panel" style="text-align:center">
+          <h1 style="font-size:44px;color:#ffeb3b;margin:6px 0">HỨNG QUẢ</h1>
+          <div style="font-weight:700;margin:6px 0">Điểm cao nhất: <span id="start-high">0</span></div>
+          <div style="margin-top:10px;display:flex;gap:10px;justify-content:center">
+            <button id="btn-start" class="btn"
+              style="padding:10px 18px;border-radius:999px;background:linear-gradient(#ffeb3b,#ff9800);font-weight:800;cursor:pointer">CHƠI
+              NGAY ▶</button>
+            <button id="btn-instructions" class="btn"
+              style="padding:10px 18px;border-radius:999px;background:#fff;font-weight:800;cursor:pointer">HƯỚNG
+              DẪN</button>
+          </div>
         </div>
-        
-        <div id="pause-screen" class="hidden">
-            <h2 class="text-6xl font-bold mb-5 drop-shadow-md">TẠM DỪNG</h2>
-            <p class="text-3xl mb-5">Điểm Hiện Tại: <span id="current-score-pause" class="text-yellow-300 font-bold">0</span></p>
-            <button id="btn-resume" class="btn btn-green">TIẾP TỤC ⏯</button>
+      </div>
 
-            <div id="pause-controls-group">
-                
-                <div id="audio-control" class="pause-control-box">
-                    <h3 class="text-2xl font-bold mb-3 text-white">Âm thanh</h3>
-                    <button id="btn-toggle-music" class="audio-btn mb-3">
-                        <span id="music-icon">🎶</span>
-                    </button>
-                    <div class="flex gap-5">
-                        <button id="btn-vol-down" class="audio-btn">
-                            <span>-</span>
-                        </button>
-                        <button id="btn-vol-up" class="audio-btn">
-                            <span>+</span>
-                        </button>
-                    </div>
-                </div>
+      <div id="pause-screen" class="overlay hidden">
+        <div class="panel" style="text-align:center; padding: 25px 30px;">
+          <h2 style="font-size:36px; margin:0 0 10px 0; color:#333; text-shadow: 1px 1px 0 #fff;">TẠM DỪNG ⏸</h2>
+          <div class="row" style="margin-bottom:20px; font-size:18px; color:#555; justify-content:center;">Điểm: <strong
+              id="pause-score" style="margin-left:8px; color:var(--accent)">0</strong></div>
 
-                <div id="difficulty-box" class="pause-control-box">
-                    <h3 class="text-2xl font-bold mb-3 text-white">Độ Khó</h3>
-                    <span class="mb-3">Cấp độ: <span id="diff-label" class="text-green-500">Dễ</span></span>
-                    <button id="btn-diff" class="diff-btn">Tăng/Giảm ▲</button>
-                </div>
+          <div class="row" style="margin-bottom:25px; justify-content:center; gap:20px;">
+            <button id="btn-resume" class="pause-btn btn-green-cute">TIẾP TỤC</button>
+            <button id="btn-restart-2" class="pause-btn btn-orange-cute">CHƠI LẠI</button>
+          </div>
 
+          <div style="background:#f0f0f0; padding:15px; border-radius:15px;">
+
+            <div style="margin-bottom:15px;">
+              <div style="font-weight:700; margin-bottom:4px; color:#555;">Âm nhạc & Âm lượng</div>
+              <div class="music-slider-wrap">
+                <button id="music-toggle" class="music-toggle-btn">🔊</button>
+                <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="0.5" style="width:160px">
+              </div>
             </div>
-        </div>
 
-
-        <div id="game-over" class="hidden">
-            <h2 class="text-6xl font-bold mb-5 drop-shadow-md">GAME OVER</h2>
-            <p class="text-3xl mb-3">Điểm Số: <span id="final-score" class="text-yellow-300 font-bold">0</span></p>
-             <p class="text-xl mb-8">Điểm Cao Nhất: <span id="final-high-score" class="text-orange-300 font-bold">0</span></p>
-            <button id="btn-restart" class="btn btn-green">CHƠI LẠI ↺</button>
-        </div>
-
-        <div id="ui-layer">
-             <div id="top-ui-row">
-                <div id="score-board">
-                    <span id="lives-display">❤️❤️❤️</span>
-                    <span>|</span>
-                    <div>
-                        <span id="score-display">0</span>
-                        <div class="high-score-text">HS: <span id="high-score-display">0</span></div>
-                    </div>
-                </div>
-                <button id="btn-pause">
-                    <span id="pause-icon">⏸</span>
-                </button>
+            <div>
+              <div style="font-weight:700; margin-bottom:8px; color:#555;">Thay đổi Độ khó</div>
+              <div class="row" style="justify-content:center; align-items:center;">
+                <div style="font-weight:800; margin-right:10px; color:#333;">Cấp độ: <span id="diff-label"
+                    style="font-weight:900; color:#2e7d32">Dễ</span></div>
+                <button id="btn-diff" class="pause-btn"
+                  style="padding:6px 15px; border-radius:15px; background:#e0e0e0; color:#333; border: 2px solid #ccc; box-shadow: none;">Tăng/Giảm</button>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
 
-        <div id="control-buttons">
-            <button id="btn-move-left" class="control-btn">
-                <span>◀</span>
-            </button>
-            <button id="btn-move-right" class="control-btn">
-                <span>▶</span>
-            </button>
+      <div id="game-over" class="overlay hidden">
+        <div class="panel" style="text-align:center">
+          <h2 style="margin:6px 0">GAME OVER</h2>
+          <div style="margin:6px 0">Điểm: <strong id="final-score">0</strong></div>
+          <div style="margin:6px 0">Điểm cao nhất: <strong id="final-high">0</strong></div>
+          <div style="margin-top:8px"><button id="btn-restart"
+              style="padding:8px 14px;border-radius:10px;border:none;background:#8bc34a;cursor:pointer">CHƠI
+              LẠI</button></div>
         </div>
+      </div>
 
-
-        <div id="basket">
-            <img id="basket-img" src="./player.png" alt="Player " class="w-30">
+      <div id="top-ui">
+        <div class="score-card">
+          <div id="lives">❤️❤️❤️</div>
+          <div style="opacity:.6">|</div>
+          <div style="text-align:right">
+            <div id="score">0</div>
+            <div class="score-small">HS: <span id="high-score">0</span></div>
+          </div>
         </div>
+        <div id="controls-right">
+          <button id="btn-pause"
+            style="width:46px;height:46px;border-radius:999px;border:none;background:#ff7043;color:#fff;cursor:pointer">
+            <span id="pause-icon">⏸</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="control-buttons">
+        <button id="btn-left" class="control-btn">◀</button>
+        <button id="btn-right" class="control-btn">▶</button>
+      </div>
+
+      <div id="basket"><img id="basket-img" src="./player.png" alt="player" class="basket-normal-float"></div>
 
     </div>
+  </div>
 
-    <script src="scripts.js"></script>
+  <audio id="bgm" loop preload="auto">
+    <source src="./music.mp3">
+  </audio>
+  <audio id="sfx-eat" preload="auto">
+    <source src="./eat_fruit.mp3">
+  </audio>
+  <audio id="sfx-ouch" preload="auto">
+    <source src="./ouch_huhu.mp3">
+  </audio>
+
+  <script>
+    (function () {
+      const BASE_W = 950, BASE_H = 600;
+      const CONTAINER = document.getElementById('game-container');
+      const WRAP = document.getElementById('game-wrap');
+      const BASKET = document.getElementById('basket');
+      const BASKET_IMG = document.getElementById('basket-img');
+      const SCORE_EL = document.getElementById('score');
+      const LIVES_EL = document.getElementById('lives');
+      const HIGHSCORE_EL = document.getElementById('high-score');
+      const START_SCREEN = document.getElementById('start-screen');
+      const PAUSE_SCREEN = document.getElementById('pause-screen');
+      const GAME_OVER = document.getElementById('game-over');
+      const ROTATE = document.getElementById('rotate-overlay');
+      const BTN_START = document.getElementById('btn-start');
+      const BTN_RESTART = document.getElementById('btn-restart');
+      const BTN_PAUSE = document.getElementById('btn-pause');
+      const BTN_RESUME = document.getElementById('btn-resume');
+      const BTN_RESTART2 = document.getElementById('btn-restart-2');
+      const MUSIC_TOGGLE = document.getElementById('music-toggle');
+      const VOL_SLIDER = document.getElementById('vol-slider');
+      const BTN_DIFF = document.getElementById('btn-diff');
+      const DIFF_LABEL = document.getElementById('diff-label');
+      const BTN_LEFT = document.getElementById('btn-left');
+      const BTN_RIGHT = document.getElementById('btn-right');
+
+      const PAUSE_ICON = document.getElementById('pause-icon');
+
+      const BGM = document.getElementById('bgm');
+      const SFX_EAT = document.getElementById('sfx-eat');
+      const SFX_OUCH = document.getElementById('sfx-ouch');
+
+      const ITEMS = [{ type: 'good', emoji: '🍎', score: 10, speed: 3 }, { type: 'good', emoji: '🍌', score: 15, speed: 4 }, { type: 'good', emoji: '🍓', score: 20, speed: 5 }, { type: 'bad', emoji: '🗿', score: -5, speed: 6 }, { type: 'bomb', emoji: '💣', score: 0, speed: 6 }];
+
+      const pool = []; const active = new Set();
+
+      const state = { running: false, paused: false, score: 0, lives: 3, high: 0, scale: 1, mouseX: BASE_W / 2, basketW: 110, basketH: 110, speedMul: 1, spawnRate: 1200, difficulty: 1 };
+
+      let rafId = null, spawnTimer = null, birdTimer = null, cloudTimer = null, airplaneTimer = null, lastTime = 0; // THÊM cloudTimer, airplaneTimer
+      let musicPlaying = false;
+
+      function createItem() { let el = pool.pop(); if (!el) { el = document.createElement('div'); el.className = 'item' } el.style.top = '-100px'; el.style.left = '0px'; el.dataset.active = '0'; CONTAINER.appendChild(el); return el }
+      function releaseItem(el) { if (!el) return; el.remove(); el.dataset.active = '0'; pool.push(el); active.delete(el) }
+
+      function spawnItem() { if (!state.running || state.paused) return; const data = ITEMS[Math.floor(Math.random() * ITEMS.length)]; const el = createItem(); el.textContent = data.emoji; el.dataset.type = data.type; el.dataset.speed = (data.speed * state.speedMul).toString(); el.dataset.score = data.score; el.style.left = Math.max(0, Math.random() * (BASE_W - 60)) + 'px'; el.dataset.y = -60; el.dataset.active = '1'; el.dataset.tainted = '0'; el.classList.remove('tainted'); const mark = el.querySelector('.bomb-mark'); if (mark) mark.remove(); active.add(el); }
+
+      // CẬP NHẬT: Thêm nhiều loại chim hơn và animation ngẫu nhiên
+      function spawnBird() {
+        if (!state.running || state.paused) return;
+        const b = document.createElement('div');
+        const birdEmojis = ['🐦', '🕊️', '🦅', '🦉', '🦆'];
+        b.textContent = birdEmojis[Math.floor(Math.random() * birdEmojis.length)];
+        b.className = 'bird';
+        b.style.top = (30 + Math.random() * 150) + 'px';
+        b.style.left = '-120px';
+
+        const duration = 8 + Math.random() * 4; // Bay từ 8-12 giây
+        const delay = Math.random() * 2; // Delay ngẫu nhiên 
+        b.style.animation = `fly-across ${duration}s linear ${delay}s infinite`;
+
+        CONTAINER.appendChild(b);
+        setTimeout(() => b.remove(), (duration + delay) * 1000 * 1.1);
+      }
+
+      // MỚI: Tạo mây
+      function spawnCloud() {
+        if (!state.running || state.paused) return;
+        const c = document.createElement('div');
+        const sizes = ['small', 'medium', 'large'];
+        const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+        c.className = `cloud ${randomSize}`;
+        c.style.top = (20 + Math.random() * 200) + 'px';
+        c.style.left = '-200px';
+
+        const baseDuration = parseFloat(c.style.animationDuration) || 60;
+        c.style.animationDuration = (baseDuration + (Math.random() * 20 - 10)) + 's';
+        c.style.animationName = 'move-cloud'; // Đảm bảo dùng animation move-cloud
+
+        CONTAINER.appendChild(c);
+        setTimeout(() => c.remove(), (parseFloat(c.style.animationDuration) * 1000) * 1.2);
+      }
+
+      // MỚI: Tạo máy bay
+      function spawnAirplane() {
+        if (!state.running || state.paused) return;
+        const a = document.createElement('div');
+        const airplanes = ['✈️', '🛩️'];
+        a.textContent = airplanes[Math.floor(Math.random() * airplanes.length)];
+        a.className = 'airplane';
+        a.style.top = (20 + Math.random() * 80) + 'px';
+        a.style.left = '-300px';
+
+        const duration = 15 + Math.random() * 10;
+        a.style.animationDuration = duration + 's';
+        a.style.animationName = 'fly-airplane'; // Đảm bảo dùng animation fly-airplane
+
+        CONTAINER.appendChild(a);
+        setTimeout(() => a.remove(), duration * 1000 * 1.2);
+      }
+
+      function markTaintedAround(bomb) { const bx = parseFloat(bomb.style.left); const by = parseFloat(bomb.dataset.y); for (const it of Array.from(active)) { if (it === bomb) continue; if (it.dataset.active !== '1') continue; const ix = parseFloat(it.style.left); const iy = parseFloat(it.dataset.y); const dx = Math.abs(ix - bx); const dy = Math.abs(iy - by); if (dx < 70 && dy < 70 && it.dataset.tainted === '0') { it.dataset.tainted = '1'; it.classList.add('tainted'); const m = document.createElement('div'); m.className = 'bomb-mark'; m.textContent = '💥'; it.appendChild(m); } } }
+
+      function isCollide(item) { const x = parseFloat(item.style.left); const y = parseFloat(item.dataset.y); const itemW = 56, itemH = 56; const basketLeft = state.mouseX - (state.basketW / 2); const basketTop = BASE_H - state.basketH - 10; const a = { left: x, right: x + itemW, top: y, bottom: y + itemH }; const b = { left: basketLeft, right: basketLeft + state.basketW, top: basketTop, bottom: basketTop + state.basketH }; const padY = 18, padX = 6; return !(a.bottom < b.top + padY || a.top > b.bottom || a.right < b.left + padX || a.left > b.right - padX); }
+
+      function playSparkle(x, y) {
+        const s = document.createElement('img'); s.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><g fill="none" stroke="gold" stroke-width="4"><path d="M40 6 L44 30 L68 30 L48 44 L54 68 L40 52 L26 68 L32 44 L12 30 L36 30 Z" fill="yellow"/></g></svg>';
+        s.className = 'sparkle'; s.style.left = (x - 20) + 'px'; s.style.top = (y - 20) + 'px'; CONTAINER.appendChild(s);
+        requestAnimationFrame(() => s.classList.add('show'));
+        setTimeout(() => s.remove(), 600);
+        if (SFX_EAT) { SFX_EAT.currentTime = 0; SFX_EAT.play().catch(() => { }); }
+      }
+
+      function playBoom(x, y, isBomb = false) {
+        const boom = document.createElement('div'); boom.className = 'boom'; boom.style.left = (x - 80) + 'px'; boom.style.top = (y - 80) + 'px'; CONTAINER.appendChild(boom);
+        setTimeout(() => boom.remove(), 650);
+
+        WRAP.classList.add('game-shake');
+        setTimeout(() => WRAP.classList.remove('game-shake'), 800);
+
+        BASKET_IMG.src = './player-hurt.png';
+        BASKET_IMG.classList.add('bomb-hit');
+        BASKET_IMG.classList.remove('basket-normal-float');
+        setTimeout(() => {
+          BASKET_IMG.src = './player.png';
+          BASKET_IMG.classList.remove('bomb-hit');
+          BASKET_IMG.classList.add('basket-normal-float');
+        }, isBomb ? 600 : 400);
+
+        if (SFX_OUCH) { SFX_OUCH.currentTime = 0; SFX_OUCH.play().catch(() => { }); }
+        navigator.vibrate && navigator.vibrate(120);
+      }
+
+      function handleCatch(item) {
+        const type = item.dataset.type;
+        const scoreVal = parseInt(item.dataset.score) || 0;
+        const tainted = item.dataset.tainted === '1';
+        releaseItem(item);
+
+        if (type === 'good' && !tainted) {
+          state.score += scoreVal;
+          const left = parseFloat(item.style.left);
+          const top = parseFloat(item.dataset.y);
+
+          BASKET_IMG.src = './player-happy.png';
+          playSparkle(left + 28, top + 28);
+          BASKET_IMG.classList.add('basket-glow', 'basket-bounce');
+          BASKET_IMG.classList.remove('basket-normal-float');
+
+          setTimeout(() => {
+            BASKET_IMG.classList.remove('basket-glow', 'basket-bounce');
+            BASKET_IMG.src = './player.png';
+            BASKET_IMG.classList.add('basket-normal-float');
+          }, 350);
+        } else {
+          state.lives--;
+          const isBomb = (type === 'bomb');
+          playBoom(state.mouseX, BASE_H - 80, isBomb);
+        }
+        updateUI();
+        checkEnd();
+      }
+
+      function handleMiss(item) { const type = item.dataset.type; const tainted = item.dataset.tainted === '1'; releaseItem(item); if (type === 'good' && !tainted) { state.lives--; updateUI(); checkEnd(); } }
+
+      function checkEnd() { if (state.lives <= 0) endGame(); }
+
+      function updateUI() { SCORE_EL.textContent = state.score; LIVES_EL.textContent = '❤️'.repeat(Math.max(0, state.lives)); HIGHSCORE_EL.textContent = state.high; document.getElementById('pause-score').textContent = state.score; }
+
+      function loop(now) {
+        if (!state.running || state.paused) { return; }
+
+        const dt = (now - lastTime) / (1000 / 60) || 1;
+        lastTime = now;
+
+        const half = state.basketW / 2; let bx = state.mouseX - half; if (bx < 0) bx = 0; if (bx > BASE_W - state.basketW) bx = BASE_W - state.basketW; BASKET.style.left = bx + 'px';
+        for (const item of Array.from(active)) {
+          if (item.dataset.active !== '1') continue; let y = parseFloat(item.dataset.y); const speed = parseFloat(item.dataset.speed) || 3; y += speed * dt; item.dataset.y = y; item.style.top = y + 'px';
+          if (item.dataset.type === 'bomb') { markTaintedAround(item); }
+          if (isCollide(item)) { handleCatch(item); continue; }
+          if (y > BASE_H) { handleMiss(item); continue; }
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      // CẬP NHẬT: Thêm logic timer cho mây và máy bay
+      function startSpawning() {
+        clearInterval(spawnTimer); spawnTimer = setInterval(spawnItem, state.spawnRate);
+        clearInterval(birdTimer); birdTimer = setInterval(spawnBird, 5000 + Math.random() * 3000);
+
+        clearInterval(cloudTimer); cloudTimer = setInterval(spawnCloud, 8000 + Math.random() * 5000);
+        clearInterval(airplaneTimer); airplaneTimer = setInterval(spawnAirplane, 20000 + Math.random() * 10000);
+      }
+
+      // CẬP NHẬT: Dừng và xóa các phần tử background
+      function stopSpawning() {
+        clearInterval(spawnTimer);
+        clearInterval(birdTimer);
+        clearInterval(cloudTimer);
+        clearInterval(airplaneTimer);
+
+        // Xóa tất cả các vật phẩm rơi và các yếu tố background
+        document.querySelectorAll('.item, .bird, .cloud, .airplane').forEach(el => el.remove());
+      }
+
+      function startGame() {
+        state.running = true; state.paused = false; state.score = 0; state.lives = 3; state.mouseX = BASE_W / 2;
+        loadHigh(); updateUI(); START_SCREEN.classList.add('hidden'); GAME_OVER.classList.add('hidden'); PAUSE_SCREEN.classList.add('hidden');
+
+        stopSpawning(); // Gọi stopSpawning trước để xóa tất cả các elements cũ
+
+        lastTime = performance.now();
+        rafId = requestAnimationFrame(loop);
+        startSpawning();
+      }
+
+      function pauseGame() {
+        if (!state.running) return;
+        state.paused = true;
+        PAUSE_SCREEN.classList.remove('hidden');
+        stopSpawning();
+        if (rafId) cancelAnimationFrame(rafId);
+        if (PAUSE_ICON) PAUSE_ICON.textContent = '▶';
+        if (!BGM.paused) BGM.pause();
+      }
+
+      function resumeGame() {
+        if (!state.running) return;
+        state.paused = false;
+        PAUSE_SCREEN.classList.add('hidden');
+
+        lastTime = performance.now();
+
+        rafId = requestAnimationFrame(loop);
+        if (PAUSE_ICON) PAUSE_ICON.textContent = '⏸';
+        startSpawning();
+        if (musicPlaying) BGM.play().catch(() => { });
+      }
+
+      function endGame() {
+        state.running = false;
+        stopSpawning();
+        if (rafId) cancelAnimationFrame(rafId);
+        saveHigh();
+        document.getElementById('final-score').textContent = state.score;
+        document.getElementById('final-high').textContent = state.high;
+        GAME_OVER.classList.remove('hidden');
+        if (!BGM.paused) BGM.pause();
+      }
+
+      function setDifficulty(level) { state.difficulty = level; switch (level) { case 1: state.speedMul = 1; state.spawnRate = 1200; DIFF_LABEL.textContent = 'Dễ'; DIFF_LABEL.style.color = '#2e7d32'; break; case 2: state.speedMul = 1.5; state.spawnRate = 900; DIFF_LABEL.textContent = 'Trung bình'; DIFF_LABEL.style.color = '#ef6c00'; break; case 3: state.speedMul = 2.2; state.spawnRate = 600; DIFF_LABEL.textContent = 'Khó'; DIFF_LABEL.style.color = '#c62828'; break } stopSpawning(); if (state.running && !state.paused) startSpawning(); }
+
+      function computeScale() {
+        const ww = window.innerWidth, hh = window.innerHeight;
+
+        if (ww < BASE_W && hh > ww) {
+          WRAP.style.visibility = 'hidden';
+          ROTATE.classList.add('show');
+        } else {
+          WRAP.style.visibility = 'visible';
+          ROTATE.classList.remove('show');
+        }
+
+        const sx = ww / BASE_W, sy = hh / BASE_H;
+        const scale = Math.min(sx, sy, 1.2);
+        state.scale = scale;
+        WRAP.style.setProperty('--scale', scale);
+
+        CTRL_WRAP = document.getElementById('control-buttons');
+        CTRL_WRAP.style.display = (ww <= 940 ? 'flex' : 'none');
+      }
+
+      function onPointer(e) {
+        if (!state.running || state.paused) return;
+        const rect = CONTAINER.getBoundingClientRect();
+        const scale = state.scale;
+        const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX);
+        if (clientX == null) return;
+        const gameX = (clientX - rect.left) / scale;
+        state.mouseX = Math.max(0, Math.min(BASE_W, gameX));
+      }
+
+      let moveInterval = null;
+      function startMove(dir) { if (moveInterval) clearInterval(moveInterval); moveInterval = setInterval(() => { state.mouseX += dir * 14; }, 16); }
+      function stopMove() { if (moveInterval) clearInterval(moveInterval); moveInterval = null; }
+
+      function loadHigh() { state.high = parseInt(localStorage.getItem('fruitCatchHigh') || '0'); HIGHSCORE_EL.textContent = state.high; document.getElementById('start-high').textContent = state.high; }
+      function saveHigh() { if (state.score > state.high) { state.high = state.score; localStorage.setItem('fruitCatchHigh', state.high); HIGHSCORE_EL.textContent = state.high; } }
+
+      // bindings
+      CONTAINER.addEventListener('pointermove', onPointer);
+      CONTAINER.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') {
+          e.preventDefault();
+        }
+        onPointer(e);
+      });
+      CONTAINER.addEventListener('touchmove', (e) => { e.preventDefault(); onPointer(e.touches ? e.touches[0] : e); }, { passive: false });
+
+      BTN_START.addEventListener('click', () => { startGame(); if (musicPlaying) BGM.play().catch(() => { }); });
+      BTN_RESTART && BTN_RESTART.addEventListener('click', () => startGame());
+      BTN_RESTART2 && BTN_RESTART2.addEventListener('click', () => startGame());
+
+      BTN_PAUSE.addEventListener('click', () => {
+        if (!state.running) return;
+        if (state.paused) {
+          resumeGame();
+        } else {
+          pauseGame();
+        }
+      });
+      BTN_RESUME && BTN_RESUME.addEventListener('click', () => resumeGame());
+
+      BTN_LEFT.addEventListener('pointerdown', (e) => { e.preventDefault(); startMove(-1); }); BTN_LEFT.addEventListener('pointerup', stopMove); BTN_LEFT.addEventListener('pointercancel', stopMove); BTN_LEFT.addEventListener('pointerleave', stopMove);
+      BTN_RIGHT.addEventListener('pointerdown', (e) => { e.preventDefault(); startMove(1); }); BTN_RIGHT.addEventListener('pointerup', stopMove); BTN_RIGHT.addEventListener('pointercancel', stopMove); BTN_RIGHT.addEventListener('pointerleave', stopMove);
+
+      window.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') startMove(-1); if (e.key === 'ArrowRight') startMove(1); if (e.key === ' ') { if (!state.running) startGame(); else { if (state.paused) resumeGame(); else pauseGame(); } } });
+      window.addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') stopMove(); });
+
+      // music controls
+      MUSIC_TOGGLE.addEventListener('click', () => { if (!musicPlaying) { BGM.volume = parseFloat(VOL_SLIDER.value); BGM.play().catch(() => { }); musicPlaying = true; MUSIC_TOGGLE.textContent = '🔊'; } else { BGM.pause(); musicPlaying = false; MUSIC_TOGGLE.textContent = '🔈'; } });
+      VOL_SLIDER.addEventListener('input', () => { BGM.volume = parseFloat(VOL_SLIDER.value); });
+
+      BTN_DIFF.addEventListener('click', () => { let next = state.difficulty + 1; if (next > 3) next = 1; setDifficulty(next); });
+
+      // LOGIC KHỞI TẠO
+      function initialize() {
+        computeScale();
+        loadHigh();
+        setDifficulty(1);
+
+        musicPlaying = true;
+        BGM.volume = parseFloat(VOL_SLIDER.value);
+        BGM.play().catch(error => { });
+        if (MUSIC_TOGGLE) MUSIC_TOGGLE.textContent = '🔊';
+      }
+
+
+      // init
+      initialize();
+      window.addEventListener('resize', computeScale);
+      window.addEventListener('orientationchange', () => setTimeout(computeScale, 260));
+
+      window.__game = { start: startGame, pause: pauseGame, resume: resumeGame, setDiff: setDifficulty };
+    })();
+  </script>
 </body>
 
 </html>
