@@ -12,6 +12,7 @@
         :root {
             --game-width-base: 950px;
             --game-height-base: 600px;
+            --scale: 1; /* Biến CSS sẽ được JS cập nhật */
         }
 
         body {
@@ -38,200 +39,110 @@
             border-radius: 25px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
             transform-origin: center center;
-            transform: scale(var(--scale, 1));
+            transform: scale(var(--scale));
             transition: border-radius 0.3s;
         }
 
-        /* Responsive Scaling */
-        @media (max-width: 949px),
-        (max-height: 900px) {
-            #game-container {
-                border: none;
-                border-radius: 0;
-            }
-        }
-
-        /* --- PLAYER / RỔ --- */
-        #basket {
-            position: absolute;
-            bottom: 10px;
-            width: 110px;
-            height: 110px;
-            z-index: 50;
-            pointer-events: none;
-        }
-        #basket-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3));
-            transition: transform 0.1s;
-        }
-        .bounce { 
-            animation: bounceAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes bounceAnim {
-            0%, 100% { transform: scale(1) translateY(0); }
-            50% { transform: scale(1.15) translateY(-15px); }
-        }
-        .glowing {
-            filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important;
-        }
-
-        /* --- VẬT PHẨM & CHIM BAY (Giữ nguyên) --- */
-        .fruit { 
-            position: absolute;
-            top: -60px;
-            width: 50px;
-            height: 50px;
-            z-index: 40;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 35px;
-            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
-        }
-        .bird { 
-            position: absolute;
-            z-index: 20;
-            font-size: 40px;
-            opacity: 0.9;
-            will-change: transform;
-        }
-        @keyframes flyRight { 
-            from { transform: translateX(-100px) translateY(0px); }
-            25% { transform: translateX(250px) translateY(-20px); }
-            50% { transform: translateX(500px) translateY(0px); }
-            75% { transform: translateX(750px) translateY(20px); }
-            to { transform: translateX(1100px) translateY(0px); }
-        }
-
-        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER / PAUSE --- */
-        #start-screen, #game-over, #pause-screen { 
-            position: absolute;
-            inset: 0;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.3s;
-        }
-        #start-screen {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-        }
-        #game-over {
-            z-index: 110;
-            background: rgba(220, 50, 50, 0.9);
-            color: white;
-        }
-        #pause-screen {
-             z-index: 105;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(3px);
-            color: white;
-            flex-direction: column; 
-        }
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        h1.title { 
-            font-size: 4rem;
-            color: #ffeb3b;
-            text-shadow: 4px 4px 0px #ff9800, 8px 8px 0px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
-            letter-spacing: 2px;
-        }
-
-        /* --- NÚT BẤM DỄ THƯƠNG (.btn) --- */
-        .btn { 
-            background: linear-gradient(to bottom, #ffeb3b, #ff9800); /* Vàng Cam Rực rỡ */
-            border: 5px solid #fff;
-            color: #8d6e63; /* Màu nâu cafe */
-            padding: 15px 40px;
-            font-size: 2rem;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 0px 0px #f44336, 0 15px 15px rgba(0, 0, 0, 0.2); /* Bóng 3D Đỏ */
-            transition: transform 0.1s, box-shadow 0.1s;
-            font-weight: 700;
-        }
-        .btn:active {
-            transform: translateY(10px) scale(0.98);
-            box-shadow: 0 0px 0px 0px #f44336, 0 5px 10px rgba(0, 0, 0, 0.2);
-        }
-        /* Nút màu xanh riêng cho Resume/Restart */
-        .btn-green { 
-            background: linear-gradient(to bottom, #8bc34a, #558b2f); /* Xanh Lá Mạ */
-            box-shadow: 0 10px 0px 0px #4caf50, 0 15px 15px rgba(0, 0, 0, 0.2);
-            color: white;
-        }
-        .btn-green:active {
-            box-shadow: 0 0px 0px 0px #4caf50, 0 5px 10px rgba(0, 0, 0, 0.2);
-        }
-
-
-        /* --- UI ĐIỂM SỐ & NÚT PAUSE --- */
-        #ui-layer {
-            position: absolute;
+        /* --- PHẦN: LOCK XOAY MÀN HÌNH & THÔNG BÁO --- */
+        #rotate-device-screen {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            z-index: 90;
-        }
-        #top-ui-row {
-             position: absolute;
-             top: 20px;
-             width: 100%;
-             display: flex;
-             justify-content: space-between;
-             padding: 0 20px;
-        }
-        #score-board {
-            position: relative; 
-            transform: none;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 30px;
-            border-radius: 30px;
-            border: 5px solid #ff9800; /* Viền Cam đậm */
-            color: #558b2f;
-            font-size: 2rem;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            pointer-events: auto;
-        }
-        .high-score-text {
-            font-size: 1rem;
-            color: #f44336; /* Màu Đỏ */
-            font-weight: 700;
-        }
-        #btn-pause {
-            pointer-events: auto;
-            background: #ff7043; /* Cam Đậm */
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
+            background-color: #333;
+            color: white;
+            z-index: 9999;
+            display: none; /* Mặc định ẩn */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 1.8rem;
-            color: white;
-            border: 4px solid #fff;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #bf360c, 0 8px 10px rgba(0, 0, 0, 0.2); /* 3D */
-            transition: transform 0.1s;
+            text-align: center;
+            font-size: 1.5rem;
+            padding: 20px;
+            font-weight: bold;
         }
-        #btn-pause:active {
-            transform: translateY(5px) scale(0.9);
-            box-shadow: 0 0px 0 #bf360c, 0 3px 5px rgba(0, 0, 0, 0.2);
+
+        /* Kích hoạt khi màn hình nhỏ (mobile) ở chế độ dọc (portrait) */
+        @media (max-width: 950px) and (orientation: portrait) {
+            #rotate-device-screen {
+                display: flex;
+            }
+            #game-container {
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
         }
+
+        @keyframes rotate-icon {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg) scale(1.2); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .rotate-anim {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: rotate-icon 2s ease-in-out infinite;
+            color: #ffeb3b;
+        }
+
+        /* --- PLAYER / RỔ --- */
+        #basket {
+            position: absolute; bottom: 10px; width: 110px; height: 110px; z-index: 50; pointer-events: none;
+        }
+        #basket-img {
+            width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3)); transition: transform 0.1s;
+        }
+        .bounce { animation: bounceAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounceAnim { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.15) translateY(-15px); } }
+        .glowing { filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important; }
+        .shake-screen { animation: shake 0.5s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translate(1px, 1px) scale(var(--scale)); }
+            10%, 90% { transform: translate(-1px, -2px) scale(var(--scale)); }
+            20%, 80% { transform: translate(-3px, 0px) scale(var(--scale)); }
+            30%, 70% { transform: translate(3px, 2px) scale(var(--scale)); }
+            40%, 60% { transform: translate(1px, -1px) scale(var(--scale)); }
+            50% { transform: translate(-1px, 2px) scale(var(--scale)); }
+        }
+
+        /* --- VẬT PHẨM & CHIM BAY --- */
+        .fruit { 
+            position: absolute; top: -60px; width: 50px; height: 50px; z-index: 40; display: flex; justify-content: center; align-items: center; font-size: 35px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2)); will-change: transform, top;
+        }
+        .bird { 
+            position: absolute; z-index: 20; font-size: 40px; opacity: 0.9; will-change: transform; left: -100px;
+        }
+        @keyframes flyRight { 
+            0% { transform: translateX(0px) translateY(0px); } 25% { transform: translateX(300px) translateY(-20px); } 50% { transform: translateX(600px) translateY(0px); } 75% { transform: translateX(900px) translateY(20px); } 100% { transform: translateX(1050px) translateY(0px); }
+        }
+
+        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER / PAUSE --- */
+        #start-screen, #game-over, #pause-screen { 
+            position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s;
+        }
+        #start-screen { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+        #game-over { z-index: 110; background: rgba(220, 50, 50, 0.9); color: white; }
+        #pause-screen { z-index: 105; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); color: white; flex-direction: column; }
+        .hidden { opacity: 0; pointer-events: none; }
+        h1.title { font-size: 4rem; color: #ffeb3b; text-shadow: 4px 4px 0px #ff9800, 8px 8px 0px rgba(0, 0, 0, 0.2); margin-bottom: 30px; letter-spacing: 2px; }
+
+        /* --- NÚT BẤM DỄ THƯƠNG (.btn) --- */
+        .btn { 
+            background: linear-gradient(to bottom, #ffeb3b, #ff9800); border: 5px solid #fff; color: #8d6e63; padding: 15px 40px; font-size: 2rem; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 0px 0px #f44336, 0 15px 15px rgba(0, 0, 0, 0.2); transition: transform 0.1s, box-shadow 0.1s; font-weight: 700;
+        }
+        .btn:active { transform: translateY(10px) scale(0.98); box-shadow: 0 0px 0px 0px #f44336, 0 5px 10px rgba(0, 0, 0, 0.2); }
+        .btn-green { background: linear-gradient(to bottom, #8bc34a, #558b2f); box-shadow: 0 10px 0px 0px #4caf50, 0 15px 15px rgba(0, 0, 0, 0.2); color: white; }
+        .btn-green:active { box-shadow: 0 0px 0px 0px #4caf50, 0 5px 10px rgba(0, 0, 0, 0.2); }
+
+        /* --- UI ĐIỂM SỐ & NÚT PAUSE --- */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; }
+        #top-ui-row { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; }
+        #score-board { background: rgba(255, 255, 255, 0.95); padding: 10px 30px; border-radius: 30px; border: 5px solid #ff9800; color: #558b2f; font-size: 2rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); display: flex; gap: 15px; align-items: center; pointer-events: auto; }
+        .high-score-text { font-size: 1rem; color: #f44336; font-weight: 700; }
+        #btn-pause { pointer-events: auto; background: #ff7043; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: white; border: 4px solid #fff; cursor: pointer; box-shadow: 0 5px 0 #bf360c, 0 8px 10px rgba(0, 0, 0, 0.2); transition: transform 0.1s; }
+        #btn-pause:active { transform: translateY(5px) scale(0.9); box-shadow: 0 0px 0 #bf360c, 0 3px 5px rgba(0, 0, 0, 0.2); }
 
 
         /* --- CONTROL BUTTONS (MOBILE ONLY) --- */
@@ -241,15 +152,18 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 70;
-            display: flex; /* Mặc định hiển thị */
+            display: flex;
             pointer-events: none;
-            gap: 100px; 
+            gap: 100px;
+            /* MẶC ĐỊNH ẨN trên Desktop */
+            opacity: 0; 
+            transition: opacity 0.3s;
         }
         .control-btn {
             pointer-events: auto; 
             width: 100px;
             height: 100px;
-            background: linear-gradient(to top, #4dd0e1, #80deea); /* Xanh Da Trời */
+            background: linear-gradient(to top, #4dd0e1, #80deea);
             color: white;
             border: 5px solid white;
             border-radius: 50%;
@@ -257,106 +171,43 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 8px 0 #00bcd4, 0 10px 10px rgba(0, 0, 0, 0.3); /* 3D */
+            box-shadow: 0 8px 0 #00bcd4, 0 10px 10px rgba(0, 0, 0, 0.3);
             transition: background 0.1s;
         }
         .control-btn:active {
             transform: translateY(5px);
             box-shadow: 0 3px 0 #00bcd4, 0 5px 5px rgba(0, 0, 0, 0.2);
         }
-        
-        /* --- UI ÂM LƯỢNG & ĐỘ KHÓ TRÊN PAUSE SCREEN --- */
-        #pause-controls-group {
-            display: flex;
-            gap: 40px;
-            margin-top: 30px;
-        }
-        .pause-control-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        /* Nút tròn nhỏ (Audio) */
-        .audio-btn {
-            background-color: #ffccbc; /* Hồng Nhạt */
-            border: 3px solid #f44336; /* Viền Đỏ */
-            color: #f44336;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 3px 0 #c62828;
-            transition: all 0.1s;
-        }
-        .audio-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 0px 0 #c62828;
-        }
-        /* Nút Tăng/Giảm Độ Khó */
-        .diff-btn {
-            background: linear-gradient(to top, #90a4ae, #b0bec5); /* Xám Mềm */
-            color: #455a64;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 3px 0 #607d8b;
-        }
-        .diff-btn:active {
-             transform: translateY(3px);
-            box-shadow: 0 0px 0 #607d8b;
-        }
-        
-        /* Tối ưu UI cho màn hình nhỏ */
-        @media (max-width: 767px) {
-            #top-ui-row {
-                top: 5px;
-                padding: 0 5px;
-            }
-            #score-board {
-                transform: scale(0.9); 
-                font-size: 1.5rem;
-                padding: 5px 15px;
-            }
-            .high-score-text {
-                font-size: 0.8rem;
-            }
-            #btn-pause {
-                width: 40px;
-                height: 40px;
-                font-size: 1.5rem;
-                transform: scale(0.9);
+
+        /* --- TỐI ƯU/HIỂN THỊ CHO MÀN HÌNH NHỎ (Mobile/Tablet) --- */
+        @media (max-width: 950px) {
+            /* HIỂN THỊ nút ảo trên Mobile/Tablet */
+            #control-buttons {
+                opacity: 1; 
+                gap: 50px; 
             }
             .control-btn {
                 width: 70px;
                 height: 70px;
                 font-size: 2.5rem;
-                gap: 50px;
                 box-shadow: 0 5px 0 #00bcd4, 0 8px 10px rgba(0, 0, 0, 0.3);
             }
-            #control-buttons {
-                gap: 50px; /* Giảm khoảng cách giữa 2 nút */
-            }
-            #pause-controls-group {
-                flex-direction: column;
-                gap: 20px;
-            }
-            /* Ẩn các phần tử legacy không cần thiết */
-            #difficulty-box, #audio-control { 
-                display: flex !important; /* Dù đã di chuyển, ta dùng flex để nó hoạt động trong pause-control-box */
-            }
+            
+            #top-ui-row { top: 5px; padding: 0 5px; }
+            #score-board { transform: scale(0.9); font-size: 1.5rem; padding: 5px 15px; }
+            .high-score-text { font-size: 0.8rem; }
+            #btn-pause { width: 40px; height: 40px; font-size: 1.5rem; transform: scale(0.9); }
+            #pause-controls-group { flex-direction: column; gap: 20px; }
         }
     </style>
 </head>
 
 <body>
+
+    <div id="rotate-device-screen">
+        <div class="rotate-anim">🔄</div>
+        <p>Vui lòng **xoay ngang màn hình** (Landscape) để chơi game.</p>
+    </div>
 
     <div id="game-container">
 

@@ -24,13 +24,13 @@ const finalHighScoreDisplay = document.getElementById('final-high-score');
 const BASE_WIDTH = 950;
 const BASE_HEIGHT = 600;
 
-// Các biến Audio (Lấy từ Pause Screen)
+// Các biến Audio
 const elMusicToggle = document.getElementById('btn-toggle-music');
 const elMusicIcon = document.getElementById('music-icon');
 const elVolUp = document.getElementById('btn-vol-up');
 const elVolDown = document.getElementById('btn-vol-down');
 
-const backgroundMusic = new Audio('./music.mp3');
+const backgroundMusic = new Audio('./music.mp3'); 
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.5;
 const soundEat = new Audio('./eat_fruit.mp3');
@@ -70,21 +70,20 @@ const ITEMS = [
     { type: 'bomb', emoji: '💣', score: -50, speed: 7, class: 'bg-black text-red-500 rounded-full border-2 border-red-500 animate-pulse' }
 ];
 
-// --- HỆ THỐNG ĐIỀU KHIỂN & RESPONSIVE ---
+// --- HỆ THỐNG ĐIỀU KHIỂN & RESPONSIVE (ĐÃ SỬA) ---
 
 function handleResize() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const BASE_WIDTH = 950;
-    const BASE_HEIGHT = 600;
+    
+    // Tính toán scale để game chiếm full màn hình trong chế độ Landscape
     const scaleX = windowWidth / BASE_WIDTH;
     const scaleY = windowHeight / BASE_HEIGHT;
     
-    let scale = Math.min(scaleX, scaleY);
+    // Sử dụng Math.min để game vừa khít
+    let scale = Math.min(scaleX, scaleY); 
     
-    // ĐIỀU CHỈNH: Áp dụng hệ số đệm 98% để tối đa hóa màn hình
-    const paddingFactor = 0.98; 
-    scale *= paddingFactor;
+    // LOẠI BỎ logic padding cũ, game sẽ scale tối đa
     
     state.currentScale = scale;
     container.style.setProperty('--scale', scale);
@@ -92,7 +91,7 @@ function handleResize() {
 }
 
 function updateBasketPos() {
-    if (state.moveDirection !== 0) {
+    if (state.isPlaying && !state.isPaused && state.moveDirection !== 0) {
         const moveSpeed = 10;
         state.mouseX += state.moveDirection * moveSpeed;
     }
@@ -114,12 +113,14 @@ container.addEventListener('mousemove', (e) => {
     state.mouseX = (e.clientX - rect.left) / state.currentScale;
 });
 
-// 2. Điều khiển Cảm ứng (Touch)
+// 2. Điều khiển Cảm ứng (Touch) - QUAN TRỌNG: Thêm {passive: false}
 function handleTouchInput(e) {
     e.preventDefault(); 
     if (!state.isPlaying || state.isPaused || e.touches.length === 0) return;
+    
     const rect = container.getBoundingClientRect();
     state.mouseX = (e.touches[0].clientX - rect.left) / state.currentScale;
+    
     updateBasketPos();
 }
 container.addEventListener('touchstart', handleTouchInput, { passive: false });
@@ -143,6 +144,7 @@ function handleMoveEnd(e) {
     state.moveDirection = 0;
 }
 
+// Cập nhật: Thêm touchcancel để xử lý thả tay giữa chừng
 btnMoveLeft.addEventListener('mousedown', handleMoveStart(-1));
 btnMoveRight.addEventListener('mousedown', handleMoveStart(1));
 btnMoveLeft.addEventListener('mouseup', handleMoveEnd);
@@ -154,6 +156,8 @@ btnMoveLeft.addEventListener('touchstart', handleMoveStart(-1), { passive: false
 btnMoveRight.addEventListener('touchstart', handleMoveStart(1), { passive: false });
 btnMoveLeft.addEventListener('touchend', handleMoveEnd);
 btnMoveRight.addEventListener('touchend', handleMoveEnd);
+btnMoveLeft.addEventListener('touchcancel', handleMoveEnd);
+btnMoveRight.addEventListener('touchcancel', handleMoveEnd);
 
 
 // 4. Thay đổi trạng thái Player 
@@ -226,6 +230,7 @@ function resumeGame() {
     gameLoopId = requestAnimationFrame(gameLoop);
     
     startSpawning();
+    clearInterval(birdSpawnerId); 
     birdSpawnerId = setInterval(spawnBird, 5000); 
     
     if (isMusicPlaying) backgroundMusic.play().catch(error => {});
@@ -242,7 +247,6 @@ function startGame() {
     state.isPaused = false; 
     state.lastTime = performance.now();
     state.mouseX = BASE_WIDTH / 2;
-    state.difficulty = 1; 
 
     updateUI();
     setPlayerStatus('normal');
@@ -297,7 +301,8 @@ function gameLoop(time) {
     const fruits = document.querySelectorAll('.fruit');
     const containerHeight = BASE_HEIGHT;
 
-    fruits.forEach(fruit => {
+    for (let i = fruits.length - 1; i >= 0; i--) {
+        const fruit = fruits[i];
         let y = parseFloat(fruit.dataset.y);
         const speed = parseFloat(fruit.dataset.speed);
 
@@ -307,6 +312,7 @@ function gameLoop(time) {
 
         const fruitLeft = parseFloat(fruit.style.left);
         const fruitRectGameSpace = { top: y, bottom: y + 50, left: fruitLeft, right: fruitLeft + 50 };
+        
         const basketLeft = parseFloat(basket.style.left);
         const basketRectGameSpace = { 
             top: containerHeight - basket.offsetHeight - 10, 
@@ -317,35 +323,34 @@ function gameLoop(time) {
 
         if (isColliding(fruitRectGameSpace, basketRectGameSpace)) {
             handleCatch(fruit);
-            return;
-        }
-
-        if (y > containerHeight) {
+        } else if (y > containerHeight) {
             handleMiss(fruit);
         }
-    });
+    }
 
     gameLoopId = requestAnimationFrame(gameLoop);
 }
 
 // Hàm kiểm tra va chạm (Giữ nguyên)
 function isColliding(a, b) {
+    const paddingY = 20; 
+    const paddingX = 10;
     return !(
-        a.bottom < b.top + 20 || 
+        a.bottom < b.top + paddingY || 
         a.top > b.bottom ||
-        a.right < b.left + 10 ||
-        a.left > b.right - 10
+        a.right < b.left + paddingX ||
+        a.left > b.right - paddingX
     );
 }
 
-// --- HIGH SCORE LOGIC ---
+// --- HIGH SCORE LOGIC & UTILS (Giữ nguyên) ---
 function loadHighScore() {
     const storedScore = localStorage.getItem('fruitCatchHighScore');
     state.highScore = storedScore ? parseInt(storedScore) : 0;
     startHighScoreDisplay.innerText = state.highScore;
     highScoreDisplay.innerText = state.highScore;
     
-    isMusicPlaying = true;
+    isMusicPlaying = true; 
     updateMusicIcon();
 }
 
@@ -357,12 +362,12 @@ function saveHighScore(currentScore) {
     highScoreDisplay.innerText = state.highScore;
 }
 
-// --- XỬ LÝ LOGIC GAME & UTILS ---
 function handleCatch(el) {
     const type = el.dataset.type;
     const scoreVal = parseInt(el.dataset.score);
     el.remove();
     state.score += scoreVal;
+    
     if (type === 'good') {
         soundEat.currentTime = 0; soundEat.play(); setPlayerStatus('happy');
     } else if (type === 'bad') {
@@ -370,6 +375,7 @@ function handleCatch(el) {
     } else if (type === 'bomb') {
         soundDamage.currentTime = 0; soundDamage.play(); setPlayerStatus('bomb'); state.lives--;
     }
+    
     checkGameStatus(); updateUI();
 }
 
@@ -377,7 +383,11 @@ function handleMiss(el) {
     const type = el.dataset.type;
     el.remove();
     if (type === 'good') {
-        state.lives--; setPlayerStatus('hit'); checkGameStatus(); updateUI();
+        state.lives--; 
+        soundDamage.currentTime = 0; soundDamage.play(); 
+        setPlayerStatus('hit'); 
+        checkGameStatus(); 
+        updateUI();
     }
 }
 
@@ -396,8 +406,10 @@ function spawnItem() {
     const el = document.createElement('div');
     el.classList.add('fruit', ...itemData.class.split(' '));
     el.innerText = itemData.emoji;
+    
     const maxLeft = BASE_WIDTH - 50;
     el.style.left = Math.random() * maxLeft + 'px';
+    
     el.dataset.y = -60;
     el.dataset.speed = itemData.speed * state.speedMultiplier;
     el.dataset.type = itemData.type;
@@ -410,14 +422,18 @@ function spawnBird() {
     const bird = document.createElement('div');
     bird.classList.add('bird');
     bird.innerText = Math.random() > 0.5 ? '🐦' : '🕊️';
-    const topPos = 50 + Math.random() * 200;
+    
+    const topPos = 50 + Math.random() * 150; 
     bird.style.top = `${topPos}px`;
+    
     const duration = 4 + Math.random() * 4;
     bird.style.animation = `flyRight ${duration}s linear`;
+    
     container.appendChild(bird);
+    
     setTimeout(() => {
         if (bird.parentNode) bird.remove();
-    }, duration * 1000);
+    }, duration * 1000 + 1000); 
 }
 
 function changeDifficulty(shouldCycle = true) {
@@ -436,7 +452,7 @@ function changeDifficulty(shouldCycle = true) {
     if (state.isPlaying && !state.isPaused) startSpawning(); 
 }
 
-// --- LOGIC ĐIỀU KHIỂN ÂM THANH ---
+// --- LOGIC ĐIỀU KHIỂN ÂM THANH (Giữ nguyên) ---
 
 function updateMusicIcon() {
     if (backgroundMusic.muted || backgroundMusic.volume === 0) { elMusicIcon.innerText = '🔇'; } 
@@ -460,10 +476,9 @@ elVolDown.addEventListener('click', () => {
 });
 
 
-// --- SỰ KIỆN KHỞI TẠO ---
+// --- SỰ KIỆN KHỞI TẠO (Giữ nguyên) ---
 btnStart.addEventListener('click', () => {
     startGame();
-    // Bật nhạc khi bắt đầu chơi (do isMusicPlaying = true từ loadHighScore)
     if (isMusicPlaying) { backgroundMusic.play().catch(error => {}); }
     updateMusicIcon(); 
 });
@@ -474,7 +489,6 @@ btnRestart.addEventListener('click', () => {
     updateMusicIcon(); 
 });
 
-// Sự kiện Pause/Resume
 btnPause.addEventListener('click', togglePause);
 btnResume.addEventListener('click', resumeGame);
 
@@ -486,3 +500,5 @@ window.addEventListener('load', () => {
     handleResize();
 });
 window.addEventListener('resize', handleResize);
+// Bổ sung: Xử lý khi orientation thay đổi (Dùng handleResize)
+window.addEventListener('orientationchange', handleResize);
