@@ -61,12 +61,14 @@
             font-size: 1.5rem;
             padding: 20px;
             font-weight: bold;
+            pointer-events: none;
         }
 
         /* Kích hoạt khi màn hình nhỏ (mobile) ở chế độ dọc (portrait) */
         @media (max-width: 950px) and (orientation: portrait) {
             #rotate-device-screen {
                 display: flex;
+                pointer-events: auto;
             }
             #game-container {
                 opacity: 0 !important;
