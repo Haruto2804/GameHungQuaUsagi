@@ -10,7 +10,6 @@
     <style>
         /* --- CẤU HÌNH CHUNG & BIẾN CSS --- */
         :root {
-            /* Kích thước gốc của game */
             --game-width-base: 950px;
             --game-height-base: 600px;
         }
@@ -26,30 +25,26 @@
             height: 100vh;
             margin: 0;
             padding: 0;
-            /* Cần thiết cho mobile để loại bỏ khoảng trống thừa */
             box-sizing: border-box; 
         }
 
         #game-container {
             position: relative;
             overflow: hidden;
-            /* Kích thước gốc */
             width: var(--game-width-base);
             height: var(--game-height-base);
             background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%);
             border: 10px solid #7cb342;
             border-radius: 25px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-            /* Đảm bảo tỉ lệ được giữ */
             transform-origin: center center;
-            /* Transform được tính toán bằng JS */
             transform: scale(var(--scale, 1));
             transition: border-radius 0.3s;
         }
 
-        /* --- LOGIC RESPONSIVE CHÍNH: Bỏ viền và góc tròn khi scale --- */
+        /* Responsive Scaling */
         @media (max-width: 949px),
-        (max-height: 599px) {
+        (max-height: 900px) {
             #game-container {
                 border: none;
                 border-radius: 0;
@@ -83,7 +78,7 @@
             filter: drop-shadow(0 0 10px #ffeb3b) drop-shadow(0 0 20px #ff9800) !important;
         }
 
-        /* --- VẬT PHẨM (FRUITS & BOMBS) --- */
+        /* --- VẬT PHẨM & CHIM BAY (Giữ nguyên) --- */
         .fruit { 
             position: absolute;
             top: -60px;
@@ -96,8 +91,6 @@
             font-size: 35px;
             filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
         }
-
-        /* --- CHIM BAY --- */
         .bird { 
             position: absolute;
             z-index: 20;
@@ -113,8 +106,8 @@
             to { transform: translateX(1100px) translateY(0px); }
         }
 
-        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER --- */
-        #start-screen, #game-over { 
+        /* --- MÀN HÌNH BẮT ĐẦU / GAME OVER / PAUSE --- */
+        #start-screen, #game-over, #pause-screen { 
             position: absolute;
             inset: 0;
             z-index: 100;
@@ -133,7 +126,14 @@
             background: rgba(220, 50, 50, 0.9);
             color: white;
         }
-        #start-screen.hidden, #game-over.hidden {
+        #pause-screen {
+             z-index: 105;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            color: white;
+            flex-direction: column; 
+        }
+        .hidden {
             opacity: 0;
             pointer-events: none;
         }
@@ -144,19 +144,36 @@
             margin-bottom: 30px;
             letter-spacing: 2px;
         }
+
+        /* --- NÚT BẤM DỄ THƯƠNG (.btn) --- */
         .btn { 
-            background: linear-gradient(to bottom, #8bc34a, #689f38);
-            border: 4px solid #fff;
-            color: white;
+            background: linear-gradient(to bottom, #ffeb3b, #ff9800); /* Vàng Cam Rực rỡ */
+            border: 5px solid #fff;
+            color: #8d6e63; /* Màu nâu cafe */
             padding: 15px 40px;
             font-size: 2rem;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 0px 0px #f44336, 0 15px 15px rgba(0, 0, 0, 0.2); /* Bóng 3D Đỏ */
             transition: transform 0.1s, box-shadow 0.1s;
+            font-weight: 700;
+        }
+        .btn:active {
+            transform: translateY(10px) scale(0.98);
+            box-shadow: 0 0px 0px 0px #f44336, 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        /* Nút màu xanh riêng cho Resume/Restart */
+        .btn-green { 
+            background: linear-gradient(to bottom, #8bc34a, #558b2f); /* Xanh Lá Mạ */
+            box-shadow: 0 10px 0px 0px #4caf50, 0 15px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        .btn-green:active {
+            box-shadow: 0 0px 0px 0px #4caf50, 0 5px 10px rgba(0, 0, 0, 0.2);
         }
 
-        /* --- UI ĐIỂM SỐ & ĐỘ KHÓ --- */
+
+        /* --- UI ĐIỂM SỐ & NÚT PAUSE --- */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -166,97 +183,175 @@
             pointer-events: none;
             z-index: 90;
         }
+        #top-ui-row {
+             position: absolute;
+             top: 20px;
+             width: 100%;
+             display: flex;
+             justify-content: space-between;
+             padding: 0 20px;
+        }
         #score-board {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9);
+            position: relative; 
+            transform: none;
+            background: rgba(255, 255, 255, 0.95);
             padding: 10px 30px;
             border-radius: 30px;
-            border: 3px solid #7cb342;
+            border: 5px solid #ff9800; /* Viền Cam đậm */
             color: #558b2f;
             font-size: 2rem;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             display: flex;
             gap: 15px;
             align-items: center;
             pointer-events: auto;
         }
-        #difficulty-box {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            pointer-events: auto;
-            background: white;
-            padding: 8px 15px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            color: #555;
-            border: 2px solid #ddd;
+        .high-score-text {
+            font-size: 1rem;
+            color: #f44336; /* Màu Đỏ */
+            font-weight: 700;
         }
-
-        /* --- UI ĐIỀU KHIỂN ÂM THANH (ĐIỀU CHỈNH VỊ TRÍ CHO MOBILE) --- */
-        #audio-control {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 80;
-            display: flex;
-            gap: 10px;
+        #btn-pause {
             pointer-events: auto;
-        }
-        .audio-btn {
+            background: #ff7043; /* Cam Đậm */
             width: 50px;
             height: 50px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            color: white;
+            border: 4px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #bf360c, 0 8px 10px rgba(0, 0, 0, 0.2); /* 3D */
+            transition: transform 0.1s;
+        }
+        #btn-pause:active {
+            transform: translateY(5px) scale(0.9);
+            box-shadow: 0 0px 0 #bf360c, 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+
+        /* --- CONTROL BUTTONS (MOBILE ONLY) --- */
+        #control-buttons {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 70;
+            display: flex; /* Mặc định hiển thị */
+            pointer-events: none;
+            gap: 100px; 
+        }
+        .control-btn {
+            pointer-events: auto; 
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(to top, #4dd0e1, #80deea); /* Xanh Da Trời */
+            color: white;
+            border: 5px solid white;
+            border-radius: 50%;
+            font-size: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 0 #00bcd4, 0 10px 10px rgba(0, 0, 0, 0.3); /* 3D */
+            transition: background 0.1s;
+        }
+        .control-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #00bcd4, 0 5px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* --- UI ÂM LƯỢNG & ĐỘ KHÓ TRÊN PAUSE SCREEN --- */
+        #pause-controls-group {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        .pause-control-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        /* Nút tròn nhỏ (Audio) */
+        .audio-btn {
+            background-color: #ffccbc; /* Hồng Nhạt */
+            border: 3px solid #f44336; /* Viền Đỏ */
+            color: #f44336;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.5rem;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 0 #c62828;
             transition: all 0.1s;
         }
-
-        /* Tối ưu UI cho màn hình nhỏ (chỉ cần scale đã xử lý phần lớn, đây là tinh chỉnh vị trí) */
-        @media (max-width: 767px) {
-            /* Giảm kích thước và đẩy vào góc sát hơn khi scale nhỏ */
-            #score-board {
-                top: 10px;
-                transform: translateX(-50%) scale(0.9); 
-            }
-            #difficulty-box {
-                bottom: 10px;
-                right: 5px;
-                transform: scale(0.9);
-            }
-            #audio-control {
-                bottom: 10px;
-                left: 5px;
-                transform: scale(0.9);
-            }
+        .audio-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 0px 0 #c62828;
+        }
+        /* Nút Tăng/Giảm Độ Khó */
+        .diff-btn {
+            background: linear-gradient(to top, #90a4ae, #b0bec5); /* Xám Mềm */
+            color: #455a64;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #607d8b;
+        }
+        .diff-btn:active {
+             transform: translateY(3px);
+            box-shadow: 0 0px 0 #607d8b;
         }
         
-        /* Hiệu ứng rung màn hình */
-        .shake-screen { 
-            animation: shake 0.5s;
-        }
-        @keyframes shake { 
-            0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(-5px, 5px); }
-            75% { transform: translate(5px, -5px); }
-        }
-        .bomb-hit { 
-            animation: explodeShake 0.6s ease-in-out;
-            filter: grayscale(100%) brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(500%) !important;
+        /* Tối ưu UI cho màn hình nhỏ */
+        @media (max-width: 767px) {
+            #top-ui-row {
+                top: 5px;
+                padding: 0 5px;
+            }
+            #score-board {
+                transform: scale(0.9); 
+                font-size: 1.5rem;
+                padding: 5px 15px;
+            }
+            .high-score-text {
+                font-size: 0.8rem;
+            }
+            #btn-pause {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+                transform: scale(0.9);
+            }
+            .control-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
+                gap: 50px;
+                box-shadow: 0 5px 0 #00bcd4, 0 8px 10px rgba(0, 0, 0, 0.3);
+            }
+            #control-buttons {
+                gap: 50px; /* Giảm khoảng cách giữa 2 nút */
+            }
+            #pause-controls-group {
+                flex-direction: column;
+                gap: 20px;
+            }
+            /* Ẩn các phần tử legacy không cần thiết */
+            #difficulty-box, #audio-control { 
+                display: flex !important; /* Dù đã di chuyển, ta dùng flex để nó hoạt động trong pause-control-box */
+            }
         }
     </style>
 </head>
@@ -270,39 +365,74 @@
 
         <div id="start-screen">
             <h1 class="title">HỨNG QUẢ</h1>
+            <p class="text-2xl mb-8 text-yellow-300 font-bold">Điểm Cao Nhất: <span id="start-high-score">0</span></p>
             <button id="btn-start" class="btn">CHƠI NGAY ▶</button>
         </div>
+        
+        <div id="pause-screen" class="hidden">
+            <h2 class="text-6xl font-bold mb-5 drop-shadow-md">TẠM DỪNG</h2>
+            <p class="text-3xl mb-5">Điểm Hiện Tại: <span id="current-score-pause" class="text-yellow-300 font-bold">0</span></p>
+            <button id="btn-resume" class="btn btn-green">TIẾP TỤC ⏯</button>
+
+            <div id="pause-controls-group">
+                
+                <div id="audio-control" class="pause-control-box">
+                    <h3 class="text-2xl font-bold mb-3 text-white">Âm thanh</h3>
+                    <button id="btn-toggle-music" class="audio-btn mb-3">
+                        <span id="music-icon">🎶</span>
+                    </button>
+                    <div class="flex gap-5">
+                        <button id="btn-vol-down" class="audio-btn">
+                            <span>-</span>
+                        </button>
+                        <button id="btn-vol-up" class="audio-btn">
+                            <span>+</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="difficulty-box" class="pause-control-box">
+                    <h3 class="text-2xl font-bold mb-3 text-white">Độ Khó</h3>
+                    <span class="mb-3">Cấp độ: <span id="diff-label" class="text-green-500">Dễ</span></span>
+                    <button id="btn-diff" class="diff-btn">Tăng/Giảm ▲</button>
+                </div>
+
+            </div>
+        </div>
+
 
         <div id="game-over" class="hidden">
             <h2 class="text-6xl font-bold mb-5 drop-shadow-md">GAME OVER</h2>
-            <p class="text-3xl mb-8">Điểm số: <span id="final-score" class="text-yellow-300 font-bold">0</span></p>
-            <button id="btn-restart" class="btn bg-blue-500">CHƠI LẠI ↺</button>
+            <p class="text-3xl mb-3">Điểm Số: <span id="final-score" class="text-yellow-300 font-bold">0</span></p>
+             <p class="text-xl mb-8">Điểm Cao Nhất: <span id="final-high-score" class="text-orange-300 font-bold">0</span></p>
+            <button id="btn-restart" class="btn btn-green">CHƠI LẠI ↺</button>
         </div>
 
         <div id="ui-layer">
-            <div id="score-board">
-                <span id="lives-display">❤️❤️❤️</span>
-                <span>|</span>
-                <span id="score-display">0</span>
-            </div>
-
-            <div id="difficulty-box">
-                <span>Cấp độ: <span id="diff-label" class="text-green-500">Dễ</span></span>
-                <button id="btn-diff" class="diff-btn">Tăng ▲</button>
+             <div id="top-ui-row">
+                <div id="score-board">
+                    <span id="lives-display">❤️❤️❤️</span>
+                    <span>|</span>
+                    <div>
+                        <span id="score-display">0</span>
+                        <div class="high-score-text">HS: <span id="high-score-display">0</span></div>
+                    </div>
+                </div>
+                <button id="btn-pause">
+                    <span id="pause-icon">⏸</span>
+                </button>
             </div>
         </div>
 
-        <div id="audio-control">
-            <button id="btn-toggle-music" class="audio-btn">
-                <span id="music-icon">🎶</span>
+        <div id="control-buttons">
+            <button id="btn-move-left" class="control-btn">
+                <span>◀</span>
             </button>
-            <button id="btn-vol-down" class="audio-btn">
-                <span>-</span>
-            </button>
-            <button id="btn-vol-up" class="audio-btn">
-                <span>+</span>
+            <button id="btn-move-right" class="control-btn">
+                <span>▶</span>
             </button>
         </div>
+
 
         <div id="basket">
             <img id="basket-img" src="./player.png" alt="Player " class="w-30">
